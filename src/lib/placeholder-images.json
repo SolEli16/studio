@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "landing-hero",
+      "description": "A modern and clean school hallway or library, conveying a sense of organization and learning.",
+      "imageUrl": "https://images.unsplash.com/photo-1660606422336-4dd7b6795838?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtb2Rlcm4lMjBzY2hvb2x8ZW58MHx8fHwxNzYwOTAxNzUxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern school"
+    }
+  ]
 }

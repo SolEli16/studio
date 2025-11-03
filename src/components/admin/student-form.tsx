@@ -69,10 +69,12 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
 
   const getSubjectsForYear = () => {
     if (!courseYear) return [];
-    if (courseYear >= 1 && courseYear <= 3) {
+    
+    if (orientation === "Ciclo Basico" && courseYear >= 1 && courseYear <= 3) {
       return subjectsByYear[courseYear as keyof typeof subjectsByYear];
     }
-    if (courseYear >= 4 && courseYear <= 6 && orientation) {
+    
+    if (courseYear >= 4 && courseYear <= 6 && orientation && orientation !== "Ciclo Basico") {
       const orientationSubjects = subjectsByOrientation[orientation as keyof typeof subjectsByOrientation];
       if (orientationSubjects) {
         return orientationSubjects[courseYear as keyof typeof orientationSubjects] || [];
@@ -265,7 +267,6 @@ export default function StudentForm({ student }: { student?: Student }) {
     name: "grades",
   });
   
-  const watchedYear = useWatch({ control: form.control, name: 'year' });
   const watchedOrientation = useWatch({ control: form.control, name: 'orientation' });
 
   function onSubmit(data: z.infer<typeof studentSchema>) {
@@ -510,28 +511,26 @@ export default function StudentForm({ student }: { student?: Student }) {
                     </FormItem>
                   )}
                 />
-                 {(watchedYear >= 4) && (
-                  <FormField
-                    control={form.control}
-                    name="orientation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Orientación</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccione una orientación" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {orientations.map(o => <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                <FormField
+                  control={form.control}
+                  name="orientation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Orientación</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione una orientación" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {orientations.map(o => <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
             </div>
             
             <Separator />

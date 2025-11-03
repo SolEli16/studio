@@ -15,6 +15,7 @@ export type Responsible = {
 };
 
 export type Orientation = 
+  | "Ciclo Basico"
   | "Economia"
   | "Ciencias Naturales"
   | "Arte"

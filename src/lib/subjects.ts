@@ -11,6 +11,11 @@ export const subjectsByYear = {
 };
 
 export const subjectsByOrientation = {
+  "Ciclo Basico": {
+    1: subjectsByYear[1],
+    2: subjectsByYear[2],
+    3: subjectsByYear[3],
+  },
   Economia: {
     4: ["Matemática-Ciclo Superior", "Literatura", "Educación Física", "Inglés", "Salud y Adolescencia", "Introducción a la Física", "Historia", "Geografía", "Biología", "NTICX", "Sistemas de información contable", "Teoría de las organizaciones"],
     5: ["Matemática-Ciclo Superior", "Literatura", "Educación Física", "Inglés", "Política y Ciudadanía", "Introducción a la Química", "Historia", "Geografía", "Elementos de micro y macroeconomía", "Derecho", "Sistemas de información contable", "Gestión Organizacional"],
@@ -54,6 +59,7 @@ export const subjectsByOrientation = {
 };
 
 export const orientations: { key: string, label: string }[] = [
+    { key: "Ciclo Basico", label: "Ciclo Básico" },
     { key: "Economia", label: "Economía" },
     { key: "Ciencias Naturales", label: "Ciencias Naturales" },
     { key: "Arte", label: "Arte" },

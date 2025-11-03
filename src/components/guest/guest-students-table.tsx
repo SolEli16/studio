@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { Eye } from "lucide-react";
 import {
   Table,
@@ -18,6 +17,15 @@ import { Label } from "@/components/ui/label";
 import type { Student } from "@/lib/definitions";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import StudentDetails from "./student-details";
 
 export default function GuestStudentsTable({ students: initialStudents }: { students: Student[] }) {
   const [students, setStudents] = React.useState(initialStudents);
@@ -95,12 +103,23 @@ export default function GuestStudentsTable({ students: initialStudents }: { stud
                 )}
               </TableCell>
               <TableCell className="text-right">
-                <Button asChild variant="outline" size="sm">
-                  <Link href="#">
-                    <Eye className="h-4 w-4 mr-2" />
-                    Ver Detalles
-                  </Link>
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Detalles
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle>Detalles del Alumno</DialogTitle>
+                      <DialogDescription>
+                        Información personal y académica de {student.fullName}.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <StudentDetails student={student} />
+                  </DialogContent>
+                </Dialog>
               </TableCell>
             </TableRow>
           ))}

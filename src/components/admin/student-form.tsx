@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -24,12 +25,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/lib/definitions";
-import { Trash2 } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 
 const responsibleSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
   email: z.string().email("Email inválido."),
   phone: z.string().min(1, "El teléfono es requerido."),
+});
+
+const gradeSchema = z.object({
+  year: z.coerce.number().int().min(1, "Año inválido"),
+  subject: z.string().min(1, "La materia es requerida."),
+  grade: z.string().min(1, "La calificación es requerida."),
+  book: z.string().min(1, "El libro es requerido."),
+  folio: z.string().min(1, "El folio es requerido."),
 });
 
 const studentSchema = z.object({
@@ -45,13 +54,33 @@ const studentSchema = z.object({
   course: z.string().min(1, "El curso es requerido."),
   division: z.string().min(1, "La división es requerida."),
   year: z.coerce.number().int().min(1, "Año inválido."),
+  grades: z.array(gradeSchema).optional(),
 });
+
+const availableSubjects = [
+  "Matemática",
+  "Lengua y Literatura",
+  "Ciencias Sociales",
+  "Ciencias Naturales",
+  "Educación Física",
+  "Inglés",
+  "Arte",
+  "Música",
+  "Historia",
+  "Geografía",
+  "Física",
+  "Química",
+  "Biología",
+];
 
 export default function StudentForm({ student }: { student?: Student }) {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof studentSchema>>({
     resolver: zodResolver(studentSchema),
-    defaultValues: student || {
+    defaultValues: student ? {
+      ...student,
+      graduationYear: student.graduationYear || undefined,
+    } : {
       fullName: "",
       dni: "",
       cuil: "",
@@ -64,12 +93,18 @@ export default function StudentForm({ student }: { student?: Student }) {
       course: "",
       division: "",
       year: 1,
+      grades: [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: responsibleFields, append: appendResponsible, remove: removeResponsible } = useFieldArray({
     control: form.control,
     name: "responsibles",
+  });
+
+  const { fields: gradeFields, append: appendGrade, remove: removeGrade } = useFieldArray({
+    control: form.control,
+    name: "grades",
   });
 
   function onSubmit(data: z.infer<typeof studentSchema>) {
@@ -77,12 +112,13 @@ export default function StudentForm({ student }: { student?: Student }) {
       title: `Alumno ${student ? 'actualizado' : 'creado'}`,
       description: `Los datos de ${data.fullName} se han guardado correctamente.`,
     });
+    console.log(data);
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <ScrollArea className="h-96 pr-6">
+        <ScrollArea className="h-[70vh] pr-6">
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Datos Personales</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -156,7 +192,7 @@ export default function StudentForm({ student }: { student?: Student }) {
             <Separator />
             
             <h3 className="text-lg font-medium">Datos de Responsables</h3>
-            {fields.map((field, index) => (
+            {responsibleFields.map((field, index) => (
               <div key={field.id} className="p-4 border rounded-md relative space-y-4">
                  {index > 0 && (
                   <Button
@@ -164,9 +200,10 @@ export default function StudentForm({ student }: { student?: Student }) {
                     variant="ghost"
                     size="icon"
                     className="absolute top-2 right-2"
-                    onClick={() => remove(index)}
+                    onClick={() => removeResponsible(index)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="sr-only">Eliminar responsable</span>
                   </Button>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -216,7 +253,7 @@ export default function StudentForm({ student }: { student?: Student }) {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => append({ name: "", email: "", phone: "" })}
+              onClick={() => appendResponsible({ name: "", email: "", phone: "" })}
             >
               Agregar Responsable
             </Button>
@@ -313,7 +350,115 @@ export default function StudentForm({ student }: { student?: Student }) {
                   )}
                 />
             </div>
-            {/* TODO: Add grades management */}
+            
+            <Separator />
+
+            <h3 className="text-lg font-medium">Calificaciones</h3>
+            <div className="space-y-4">
+              {gradeFields.map((field, index) => (
+                <div key={field.id} className="p-4 border rounded-md relative space-y-4">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={() => removeGrade(index)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="sr-only">Eliminar calificación</span>
+                  </Button>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`grades.${index}.year`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Año Cursado</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Año" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {[1, 2, 3, 4, 5, 6].map(year => (
+                                <SelectItem key={year} value={String(year)}>{year}°</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`grades.${index}.subject`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Materia</FormLabel>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableSubjects.map(subject => (
+                                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`grades.${index}.grade`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nota</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name={`grades.${index}.book`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Libro</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name={`grades.${index}.folio`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Folio</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => appendGrade({ year: 1, subject: '', grade: '', book: '', folio: '' })}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Agregar Calificación
+              </Button>
+            </div>
+
           </div>
         </ScrollArea>
         <div className="pt-6 flex justify-end">
@@ -323,3 +468,5 @@ export default function StudentForm({ student }: { student?: Student }) {
     </Form>
   );
 }
+
+    

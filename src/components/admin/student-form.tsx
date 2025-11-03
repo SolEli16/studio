@@ -83,6 +83,13 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
 
   const availableSubjects = getSubjectsForYear();
 
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1979 }, (_, i) => currentYear - i);
+  const divisions = [
+    ...Array.from({ length: 8 }, (_, i) => `${i + 1}ra`),
+    ...Array.from({ length: 8 }, (_, i) => String.fromCharCode(65 + i)),
+  ];
+
   return (
     <div className="p-4 border rounded-md relative space-y-4">
       <Button
@@ -124,7 +131,18 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
           render={({ field }) => (
             <FormItem>
               <FormLabel>Año de Cursada</FormLabel>
-              <FormControl><Input type="number" {...field} /></FormControl>
+              <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Año" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {years.map(year => (
+                    <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -135,7 +153,18 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
           render={({ field }) => (
             <FormItem>
               <FormLabel>División</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="División" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {divisions.map(div => (
+                    <SelectItem key={div} value={div}>{div}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

@@ -52,7 +52,7 @@ export default function GuestStudentsTable({ students: initialStudents }: { stud
           <TableRow key={student.id}>
             <TableCell className="font-medium">{student.fullName}</TableCell>
             <TableCell className="hidden md:table-cell">{student.dni}</TableCell>
-            <TableCell>{student.course}</TableCell>
+            <TableCell>{student.course} {student.division}</TableCell>
             <TableCell>
               <div className="flex items-center space-x-2">
                 <Switch

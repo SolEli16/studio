@@ -6,20 +6,25 @@ export type Grade = {
   folio: string;
 };
 
+export type Responsible = {
+  name: string;
+  email: string;
+  phone: string;
+};
+
 export type Student = {
   id: string;
   fullName: string;
-  dni: string;
   cuil: string;
-  address: string;
+  dni: string;
   birthDate: string;
   birthPlace: string;
-  email: string;
-  responsibleAdultsPhones: [string, string];
+  responsibles: Responsible[];
   entryYear: number;
   graduationYear: number | null;
   shift: 'Mañana' | 'Tarde' | 'Noche';
   course: string;
+  division: string;
   year: number;
   grades: Grade[];
   isRegular: boolean;
@@ -35,14 +40,14 @@ export type CourseAssignment = {
 export type Teacher = {
   id: string;
   fullName: string;
-  dni: string;
   cuil: string;
-  address: string;
+  dni: string;
   birthDate: string;
   birthPlace: string;
   abcEmail: string;
   altEmail: string;
   phone: string;
   titles: string[];
+  registrationList: string;
   assignedCourses: CourseAssignment[];
 };

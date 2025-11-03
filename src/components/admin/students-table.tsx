@@ -21,6 +21,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Student } from "@/lib/definitions";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import StudentForm from "./student-form";
 
 export default function StudentsTable({ students: initialStudents }: { students: Student[] }) {
   const [students, setStudents] = React.useState(initialStudents);
@@ -53,7 +62,7 @@ export default function StudentsTable({ students: initialStudents }: { students:
           <TableRow key={student.id}>
             <TableCell className="font-medium">{student.fullName}</TableCell>
             <TableCell className="hidden md:table-cell">{student.dni}</TableCell>
-            <TableCell>{student.course}</TableCell>
+            <TableCell>{student.course} {student.division}</TableCell>
             <TableCell className="hidden md:table-cell">{student.shift}</TableCell>
             <TableCell>
               <Badge variant={student.isRegular ? "default" : "destructive"} className={student.isRegular ? "bg-green-600" : ""}>
@@ -61,28 +70,41 @@ export default function StudentsTable({ students: initialStudents }: { students:
               </Badge>
             </TableCell>
             <TableCell>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button aria-haspopup="true" size="icon" variant="ghost">
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Toggle menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                  <DropdownMenuItem>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => handleDelete(student.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Eliminar
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Dialog>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Toggle menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                    <DialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                    </DialogTrigger>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => handleDelete(student.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                 <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Editar Alumno</DialogTitle>
+                      <DialogDescription>
+                        Modifique los datos del alumno.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <StudentForm student={student} />
+                  </DialogContent>
+              </Dialog>
             </TableCell>
           </TableRow>
         ))}

@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { PlusCircle } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +9,15 @@ import {
 } from "@/components/ui/card";
 import { STUDENTS } from "@/lib/mock-data";
 import StudentsTable from "@/components/admin/students-table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import StudentForm from "@/components/admin/student-form";
 
 export default function AdminStudentsPage() {
   const students = STUDENTS;
@@ -25,14 +32,25 @@ export default function AdminStudentsPage() {
               Gestionar los datos personales y académicos de los alumnos.
             </CardDescription>
           </div>
-          <Button asChild size="sm" className="gap-1">
-            <Link href="#">
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                Nuevo Alumno
-              </span>
-            </Link>
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1">
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                  Nuevo Alumno
+                </span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Nuevo Alumno</DialogTitle>
+                <DialogDescription>
+                  Complete el formulario para agregar un nuevo alumno.
+                </DialogDescription>
+              </DialogHeader>
+              <StudentForm />
+            </DialogContent>
+          </Dialog>
         </div>
       </CardHeader>
       <CardContent>

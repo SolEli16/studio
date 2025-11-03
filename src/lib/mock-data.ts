@@ -20,7 +20,7 @@ export const STUDENTS: Student[] = [
     year: 5,
     grades: [
       { year: 2022, subject: 'Matemática', grade: '8', book: 'L1', folio: 'F23' },
-      { year: 2022, subject: 'Lengua', grade: '9', book: 'L1', folio: 'F24' },
+      { year: 2022, subject: 'Lengua y Literatura', grade: '9', book: 'L1', folio: 'F24' },
     ],
     isRegular: true,
   },
@@ -77,7 +77,6 @@ export const TEACHERS: Teacher[] = [
     fullName: 'Ana Martinez',
     dni: '25111222',
     cuil: '27-25111222-9',
-    address: 'Av. Rivadavia 2030',
     birthDate: '1985-08-20',
     birthPlace: 'Buenos Aires',
     abcEmail: 'ana.martinez@abc.gob.ar',
@@ -95,7 +94,6 @@ export const TEACHERS: Teacher[] = [
     fullName: 'Roberto Sanchez',
     dni: '22888999',
     cuil: '20-22888999-1',
-    address: 'Calle Belgrano 550',
     birthDate: '1979-03-12',
     birthPlace: 'Córdoba',
     abcEmail: 'roberto.sanchez@abc.gob.ar',
@@ -104,8 +102,24 @@ export const TEACHERS: Teacher[] = [
     titles: ['Profesorado en Lengua y Literatura'],
     registrationList: 'Listado 108 A',
     assignedCourses: [
-      { shift: 'Tarde', course: '2do C', schedule: 'Miércoles 13:30-15:30', subject: 'Lengua' },
-      { shift: 'Tarde', course: '3ro A', schedule: 'Jueves 16:00-18:00', subject: 'Literatura' },
+      { shift: 'Tarde', course: '2do C', schedule: 'Miércoles 13:30-15:30', subject: 'Lengua y Literatura' },
+      { shift: 'Tarde', course: '3ro A', schedule: 'Jueves 16:00-18:00', subject: 'Lengua y Literatura' },
     ],
   },
+];
+
+export const availableSubjects = [
+  "Matemática",
+  "Lengua y Literatura",
+  "Ciencias Sociales",
+  "Ciencias Naturales",
+  "Educación Física",
+  "Inglés",
+  "Arte",
+  "Música",
+  "Historia",
+  "Geografía",
+  "Física",
+  "Química",
+  "Biología",
 ];

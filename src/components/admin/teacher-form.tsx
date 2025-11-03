@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,17 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type { Teacher } from "@/lib/definitions";
+import { PlusCircle, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { availableSubjects } from "@/lib/mock-data";
+
+
+const courseAssignmentSchema = z.object({
+  subject: z.string().min(1, "La materia es requerida."),
+  course: z.string().min(1, "El curso es requerido."),
+  shift: z.enum(["Mañana", "Tarde", "Noche"]),
+  schedule: z.string().min(1, "El horario es requerido."),
+});
 
 const teacherSchema = z.object({
   fullName: z.string().min(1, "El nombre completo es requerido."),
@@ -30,6 +42,7 @@ const teacherSchema = z.object({
   phone: z.string().min(1, "El teléfono es requerido."),
   titles: z.string().min(1, "Se requiere al menos un título."),
   registrationList: z.string().min(1, "El listado es requerido."),
+  assignedCourses: z.array(courseAssignmentSchema).optional(),
 });
 
 export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
@@ -38,7 +51,8 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
     resolver: zodResolver(teacherSchema),
     defaultValues: teacher ? {
       ...teacher,
-      titles: teacher.titles.join(', ')
+      titles: teacher.titles.join(', '),
+      assignedCourses: teacher.assignedCourses || [],
     } : {
       fullName: "",
       dni: "",
@@ -50,7 +64,13 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
       phone: "",
       titles: "",
       registrationList: "",
+      assignedCourses: [],
     },
+  });
+
+  const { fields: assignedCoursesFields, append: appendAssignedCourse, remove: removeAssignedCourse } = useFieldArray({
+    control: form.control,
+    name: "assignedCourses",
   });
 
   function onSubmit(data: z.infer<typeof teacherSchema>) {
@@ -65,7 +85,7 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <ScrollArea className="h-96 pr-6">
+        <ScrollArea className="h-[70vh] pr-6">
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Datos Personales</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -207,7 +227,103 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
                 />
             </div>
 
-            {/* TODO: Add assigned courses management */}
+            <Separator />
+
+            <h3 className="text-lg font-medium">Cursos Asignados</h3>
+            <div className="space-y-4">
+              {assignedCoursesFields.map((field, index) => (
+                <div key={field.id} className="p-4 border rounded-md relative space-y-4">
+                   <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={() => removeAssignedCourse(index)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="sr-only">Eliminar curso</span>
+                  </Button>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                     <FormField
+                      control={form.control}
+                      name={`assignedCourses.${index}.subject`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Materia</FormLabel>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableSubjects.map(subject => (
+                                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`assignedCourses.${index}.course`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Curso</FormLabel>
+                          <FormControl><Input {...field} placeholder="Ej: 5to A" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`assignedCourses.${index}.shift`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Turno</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Mañana">Mañana</SelectItem>
+                              <SelectItem value="Tarde">Tarde</SelectItem>
+                              <SelectItem value="Noche">Noche</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name={`assignedCourses.${index}.schedule`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Horario</FormLabel>
+                          <FormControl><Input {...field} placeholder="Ej: Lunes 7:30-9:30" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => appendAssignedCourse({ subject: "", course: "", shift: "Mañana", schedule: "" })}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Agregar Curso Asignado
+              </Button>
+            </div>
           </div>
         </ScrollArea>
         <div className="pt-6 flex justify-end">
@@ -217,3 +333,4 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
     </Form>
   );
 }
+

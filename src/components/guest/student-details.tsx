@@ -101,11 +101,11 @@ export default function StudentDetails({ student }: { student: Student }) {
             </div>
             <div>
                 <p className="text-muted-foreground">Regularidad</p>
-                <p className="font-medium">
+                <div className="font-medium">
                     <Badge variant={student.isRegular ? "default" : "destructive"} className={student.isRegular ? "bg-green-600" : ""}>
                         {student.isRegular ? "Regular" : "No Regular"}
                     </Badge>
-                </p>
+                </div>
             </div>
           </div>
         </div>

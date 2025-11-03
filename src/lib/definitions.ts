@@ -12,6 +12,16 @@ export type Responsible = {
   phone: string;
 };
 
+export type Orientation = 
+  | "Economia"
+  | "Ciencias Naturales"
+  | "Arte"
+  | "Ciencias Sociales"
+  | "Comunicacion"
+  | "Turismo"
+  | "Educacion Fisica"
+  | "Lenguas Extranjeras";
+
 export type Student = {
   id: string;
   fullName: string;
@@ -28,6 +38,7 @@ export type Student = {
   year: number;
   grades: Grade[];
   isRegular: boolean;
+  orientation?: Orientation;
 };
 
 export type CourseAssignment = {

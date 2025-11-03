@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import type { Student } from "@/lib/definitions";
+import type { Student, Orientation } from "@/lib/definitions";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { subjectsByYear, subjectsByOrientation, orientations } from "@/lib/subjects";
 
 const responsibleSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
@@ -54,24 +55,127 @@ const studentSchema = z.object({
   course: z.string().min(1, "El curso es requerido."),
   division: z.string().min(1, "La división es requerida."),
   year: z.coerce.number().int().min(1, "Año inválido."),
+  orientation: z.custom<Orientation>().optional(),
   grades: z.array(gradeSchema).optional(),
 });
 
-const availableSubjects = [
-  "Matemática",
-  "Lengua y Literatura",
-  "Ciencias Sociales",
-  "Ciencias Naturales",
-  "Educación Física",
-  "Inglés",
-  "Arte",
-  "Música",
-  "Historia",
-  "Geografía",
-  "Física",
-  "Química",
-  "Biología",
-];
+function GradeForm({ control, index, remove, orientation }: { control: any, index: number, remove: (index: number) => void, orientation?: Orientation }) {
+  const year = useWatch({
+    control,
+    name: `grades.${index}.year`,
+  });
+
+  const getSubjectsForYear = () => {
+    if (!year) return [];
+    if (year >= 1 && year <= 3) {
+      return subjectsByYear[year as keyof typeof subjectsByYear];
+    }
+    if (year >= 4 && year <= 6 && orientation) {
+      const orientationSubjects = subjectsByOrientation[orientation as keyof typeof subjectsByOrientation];
+      if (orientationSubjects) {
+        return orientationSubjects[year as keyof typeof orientationSubjects] || [];
+      }
+    }
+    return [];
+  };
+
+  const availableSubjects = getSubjectsForYear();
+
+  return (
+    <div className="p-4 border rounded-md relative space-y-4">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute top-2 right-2"
+        onClick={() => remove(index)}
+      >
+        <Trash2 className="h-4 w-4 text-destructive" />
+        <span className="sr-only">Eliminar calificación</span>
+      </Button>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <FormField
+          control={control}
+          name={`grades.${index}.year`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Año Cursado</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Año" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6].map(year => (
+                    <SelectItem key={year} value={String(year)}>{year}°</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name={`grades.${index}.subject`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Materia</FormLabel>
+               <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!year}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {availableSubjects.map(subject => (
+                    <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name={`grades.${index}.grade`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nota</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={control}
+          name={`grades.${index}.book`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Libro</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={control}
+          name={`grades.${index}.folio`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Folio</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  );
+}
+
 
 export default function StudentForm({ student }: { student?: Student }) {
   const { toast } = useToast();
@@ -80,6 +184,7 @@ export default function StudentForm({ student }: { student?: Student }) {
     defaultValues: student ? {
       ...student,
       graduationYear: student.graduationYear || undefined,
+      orientation: student.orientation || undefined,
     } : {
       fullName: "",
       dni: "",
@@ -106,6 +211,9 @@ export default function StudentForm({ student }: { student?: Student }) {
     control: form.control,
     name: "grades",
   });
+  
+  const watchedYear = useWatch({ control: form.control, name: 'year' });
+  const watchedOrientation = useWatch({ control: form.control, name: 'orientation' });
 
   function onSubmit(data: z.infer<typeof studentSchema>) {
     toast({
@@ -349,6 +457,28 @@ export default function StudentForm({ student }: { student?: Student }) {
                     </FormItem>
                   )}
                 />
+                 {(watchedYear >= 4) && (
+                  <FormField
+                    control={form.control}
+                    name="orientation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Orientación</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccione una orientación" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {orientations.map(o => <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
             </div>
             
             <Separator />
@@ -356,97 +486,13 @@ export default function StudentForm({ student }: { student?: Student }) {
             <h3 className="text-lg font-medium">Calificaciones</h3>
             <div className="space-y-4">
               {gradeFields.map((field, index) => (
-                <div key={field.id} className="p-4 border rounded-md relative space-y-4">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={() => removeGrade(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                    <span className="sr-only">Eliminar calificación</span>
-                  </Button>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <FormField
-                      control={form.control}
-                      name={`grades.${index}.year`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Año Cursado</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Año" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {[1, 2, 3, 4, 5, 6].map(year => (
-                                <SelectItem key={year} value={String(year)}>{year}°</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`grades.${index}.subject`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Materia</FormLabel>
-                           <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccione" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {availableSubjects.map(subject => (
-                                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`grades.${index}.grade`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nota</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name={`grades.${index}.book`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Libro</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name={`grades.${index}.folio`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Folio</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+                 <GradeForm
+                  key={field.id}
+                  control={form.control}
+                  index={index}
+                  remove={removeGrade}
+                  orientation={watchedOrientation}
+                />
               ))}
               <Button
                 type="button"

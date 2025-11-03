@@ -18,6 +18,7 @@ export const STUDENTS: Student[] = [
     course: '5to',
     division: 'A',
     year: 5,
+    orientation: 'Economia',
     grades: [
       { year: 2022, subject: 'Matemática', grade: '8', book: 'L1', folio: 'F23' },
       { year: 2022, subject: 'Lengua y Literatura', grade: '9', book: 'L1', folio: 'F24' },
@@ -41,6 +42,7 @@ export const STUDENTS: Student[] = [
     course: 'Egresado',
     division: '',
     year: 6,
+    orientation: 'Ciencias Naturales',
     grades: [
        { year: 2023, subject: 'Física', grade: '10', book: 'L1', folio: 'F02' },
        { year: 2023, subject: 'Química', grade: '9', book: 'L1', folio: 'F03' },
@@ -68,6 +70,7 @@ export const STUDENTS: Student[] = [
       { year: 2022, subject: 'Historia', grade: '7', book: 'L1', folio: 'F55' },
     ],
     isRegular: false,
+    orientation: 'Ciencias Sociales',
   },
 ];
 
@@ -106,20 +109,4 @@ export const TEACHERS: Teacher[] = [
       { shift: 'Tarde', course: '3ro A', schedule: 'Jueves 16:00-18:00', subject: 'Lengua y Literatura' },
     ],
   },
-];
-
-export const availableSubjects = [
-  "Matemática",
-  "Lengua y Literatura",
-  "Ciencias Sociales",
-  "Ciencias Naturales",
-  "Educación Física",
-  "Inglés",
-  "Arte",
-  "Música",
-  "Historia",
-  "Geografía",
-  "Física",
-  "Química",
-  "Biología",
 ];

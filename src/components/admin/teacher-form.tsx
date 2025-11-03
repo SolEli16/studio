@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Teacher } from "@/lib/definitions";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { availableSubjects } from "@/lib/mock-data";
+import { allSubjects } from "@/lib/subjects";
 
 
 const courseAssignmentSchema = z.object({
@@ -257,7 +257,7 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {availableSubjects.map(subject => (
+                              {allSubjects.map(subject => (
                                 <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                               ))}
                             </SelectContent>
@@ -333,4 +333,3 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
     </Form>
   );
 }
-

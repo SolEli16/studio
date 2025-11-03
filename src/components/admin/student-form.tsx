@@ -315,7 +315,7 @@ export default function StudentForm({ student }: { student?: Student }) {
                   name="course"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Curso</FormLabel>
+                      <FormLabel>Curso Actual</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -328,7 +328,7 @@ export default function StudentForm({ student }: { student?: Student }) {
                   name="division"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>División</FormLabel>
+                      <FormLabel>División Actual</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -341,7 +341,7 @@ export default function StudentForm({ student }: { student?: Student }) {
                   name="year"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Año</FormLabel>
+                      <FormLabel>Año Actual</FormLabel>
                        <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -468,5 +468,3 @@ export default function StudentForm({ student }: { student?: Student }) {
     </Form>
   );
 }
-
-    

@@ -35,7 +35,9 @@ const responsibleSchema = z.object({
 });
 
 const gradeSchema = z.object({
-  year: z.coerce.number().int().min(1, "Año inválido"),
+  courseYear: z.coerce.number().int().min(1, "Curso inválido"),
+  actualYear: z.coerce.number().int().min(1980, "Año de cursada inválido"),
+  division: z.string().min(1, "La división es requerida."),
   subject: z.string().min(1, "La materia es requerida."),
   grade: z.string().min(1, "La calificación es requerida."),
   book: z.string().min(1, "El libro es requerido."),
@@ -60,20 +62,20 @@ const studentSchema = z.object({
 });
 
 function GradeForm({ control, index, remove, orientation }: { control: any, index: number, remove: (index: number) => void, orientation?: Orientation }) {
-  const year = useWatch({
+  const courseYear = useWatch({
     control,
-    name: `grades.${index}.year`,
+    name: `grades.${index}.courseYear`,
   });
 
   const getSubjectsForYear = () => {
-    if (!year) return [];
-    if (year >= 1 && year <= 3) {
-      return subjectsByYear[year as keyof typeof subjectsByYear];
+    if (!courseYear) return [];
+    if (courseYear >= 1 && courseYear <= 3) {
+      return subjectsByYear[courseYear as keyof typeof subjectsByYear];
     }
-    if (year >= 4 && year <= 6 && orientation) {
+    if (courseYear >= 4 && courseYear <= 6 && orientation) {
       const orientationSubjects = subjectsByOrientation[orientation as keyof typeof subjectsByOrientation];
       if (orientationSubjects) {
-        return orientationSubjects[year as keyof typeof orientationSubjects] || [];
+        return orientationSubjects[courseYear as keyof typeof orientationSubjects] || [];
       }
     }
     return [];
@@ -93,17 +95,17 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
         <Trash2 className="h-4 w-4 text-destructive" />
         <span className="sr-only">Eliminar calificación</span>
       </Button>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <FormField
           control={control}
-          name={`grades.${index}.year`}
+          name={`grades.${index}.courseYear`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Año Cursado</FormLabel>
+              <FormLabel>Curso</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Año" />
+                    <SelectValue placeholder="Curso" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -116,13 +118,35 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
             </FormItem>
           )}
         />
+         <FormField
+          control={control}
+          name={`grades.${index}.actualYear`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Año de Cursada</FormLabel>
+              <FormControl><Input type="number" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name={`grades.${index}.division`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>División</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={control}
           name={`grades.${index}.subject`}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="md:col-span-1">
               <FormLabel>Materia</FormLabel>
-               <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!year}>
+               <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!courseYear}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccione" />
@@ -498,7 +522,7 @@ export default function StudentForm({ student }: { student?: Student }) {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => appendGrade({ year: 1, subject: '', grade: '', book: '', folio: '' })}
+                onClick={() => appendGrade({ courseYear: 1, subject: '', grade: '', book: '', folio: '', actualYear: new Date().getFullYear(), division: '' })}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Agregar Calificación

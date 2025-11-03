@@ -1,5 +1,7 @@
 export type Grade = {
-  year: number;
+  courseYear: number;
+  actualYear: number;
+  division: string;
   subject: string;
   grade: string;
   book: string;

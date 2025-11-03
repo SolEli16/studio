@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Student } from "@/lib/definitions";
@@ -92,7 +93,7 @@ export default function StudentDetails({ student }: { student: Student }) {
               <p className="font-medium">{student.graduationYear || "No egresado"}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Curso</p>
+              <p className="text-muted-foreground">Curso Actual</p>
               <p className="font-medium">{student.year}° {student.division}</p>
             </div>
             <div>
@@ -121,7 +122,9 @@ export default function StudentDetails({ student }: { student: Student }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Año Cursado</TableHead>
+                  <TableHead>Curso</TableHead>
+                  <TableHead>Año de Cursada</TableHead>
+                  <TableHead>División</TableHead>
                   <TableHead>Materia</TableHead>
                   <TableHead>Nota</TableHead>
                   <TableHead>Libro</TableHead>
@@ -131,7 +134,9 @@ export default function StudentDetails({ student }: { student: Student }) {
               <TableBody>
                 {student.grades.map((grade, index) => (
                   <TableRow key={index}>
-                    <TableCell>{grade.year}°</TableCell>
+                    <TableCell>{grade.courseYear}°</TableCell>
+                    <TableCell>{grade.actualYear}</TableCell>
+                    <TableCell>{grade.division}</TableCell>
                     <TableCell>{grade.subject}</TableCell>
                     <TableCell>{grade.grade}</TableCell>
                     <TableCell>{grade.book}</TableCell>
@@ -148,3 +153,4 @@ export default function StudentDetails({ student }: { student: Student }) {
     </ScrollArea>
   );
 }
+

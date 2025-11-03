@@ -20,8 +20,8 @@ export const STUDENTS: Student[] = [
     year: 5,
     orientation: 'Economia',
     grades: [
-      { year: 2022, subject: 'Matemática', grade: '8', book: 'L1', folio: 'F23' },
-      { year: 2022, subject: 'Lengua y Literatura', grade: '9', book: 'L1', folio: 'F24' },
+      { courseYear: 4, actualYear: 2022, division: 'A', subject: 'Matemática-Ciclo Superior', grade: '8', book: 'L1', folio: 'F23' },
+      { courseYear: 4, actualYear: 2022, division: 'A', subject: 'Literatura', grade: '9', book: 'L1', folio: 'F24' },
     ],
     isRegular: true,
   },
@@ -44,8 +44,8 @@ export const STUDENTS: Student[] = [
     year: 6,
     orientation: 'Ciencias Naturales',
     grades: [
-       { year: 2023, subject: 'Física', grade: '10', book: 'L1', folio: 'F02' },
-       { year: 2023, subject: 'Química', grade: '9', book: 'L1', folio: 'F03' },
+       { courseYear: 6, actualYear: 2023, division: 'B', subject: 'Física Clásica y Moderna', grade: '10', book: 'L1', folio: 'F02' },
+       { courseYear: 6, actualYear: 2023, division: 'B', subject: 'Química del Carbono', grade: '9', book: 'L1', folio: 'F03' },
     ],
     isRegular: false,
   },
@@ -67,7 +67,7 @@ export const STUDENTS: Student[] = [
     division: 'B',
     year: 4,
     grades: [
-      { year: 2022, subject: 'Historia', grade: '7', book: 'L1', folio: 'F55' },
+      { courseYear: 3, actualYear: 2022, division: 'B', subject: 'Historia', grade: '7', book: 'L1', folio: 'F55' },
     ],
     isRegular: false,
     orientation: 'Ciencias Sociales',

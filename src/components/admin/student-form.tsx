@@ -140,7 +140,7 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Año" />
-                  </Trigger>
+                  </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {years.map(year => (
@@ -587,3 +587,5 @@ export default function StudentForm({ student }: { student?: Student }) {
     </Form>
   )
 }
+
+    

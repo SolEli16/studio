@@ -64,7 +64,7 @@ const studentSchema = z.object({
   isRegular: z.boolean().default(true),
 });
 
-function GradeForm({ control, index, remove, orientation }: { control: any, index: number, remove: (index: number) => void, orientation: Orientation }) {
+function GradeForm({ control, index, remove, availableYears, orientation }: { control: any, index: number, remove: (index: number) => void, availableYears: number[], orientation: Orientation }) {
   const courseYear = useWatch({
     control,
     name: `grades.${index}.courseYear`,
@@ -73,17 +73,17 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
   const getSubjectsForYear = () => {
     if (!courseYear) return [];
     
-    // For years 1, 2, 3, always use "Ciclo Basico"
-    if (courseYear >= 1 && courseYear <= 3) {
+    const yearToUse = availableYears.includes(courseYear) ? courseYear : availableYears[0];
+    
+    if (yearToUse >= 1 && yearToUse <= 3) {
       const basicCycleSubjects = subjectsByOrientation["Ciclo Basico"];
-      return basicCycleSubjects[courseYear as keyof typeof basicCycleSubjects] || [];
+      return basicCycleSubjects[yearToUse as keyof typeof basicCycleSubjects] || [];
     }
     
-    // For years 4, 5, 6, use the selected orientation
-    if (courseYear >= 4 && courseYear <= 6 && orientation && orientation !== "Ciclo Basico") {
+    if (yearToUse >= 4 && yearToUse <= 6 && orientation && orientation !== "Ciclo Basico") {
       const orientationSubjects = subjectsByOrientation[orientation as keyof typeof subjectsByOrientation];
       if (orientationSubjects) {
-        return orientationSubjects[courseYear as keyof typeof orientationSubjects] || [];
+        return orientationSubjects[yearToUse as keyof typeof orientationSubjects] || [];
       }
     }
     return [];
@@ -124,7 +124,7 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {[1, 2, 3, 4, 5, 6].map(year => (
+                  {availableYears.map(year => (
                     <SelectItem key={year} value={String(year)}>{year}°</SelectItem>
                   ))}
                 </SelectContent>
@@ -288,6 +288,9 @@ export default function StudentForm({ student }: { student?: Student }) {
     control: form.control,
     name: "orientation",
   });
+  
+  const basicCycleGrades = gradesFields.filter(g => (g.courseYear || 0) <= 3);
+  const superiorCycleGrades = gradesFields.filter(g => (g.courseYear || 0) > 3);
 
   function onSubmit(data: z.infer<typeof studentSchema>) {
     const studentData = {
@@ -575,18 +578,20 @@ export default function StudentForm({ student }: { student?: Student }) {
               </div>
             </section>
             
-            {/* Calificaciones */}
+            {/* Calificaciones Ciclo Básico */}
             <section>
-                <h3 className="text-lg font-medium">Calificaciones</h3>
+                <h3 className="text-lg font-medium">Calificaciones de Ciclo Básico</h3>
                 <Separator className="my-2" />
                 <div className="space-y-4">
                     {gradesFields.map((field, index) => (
+                      (field.courseYear <= 3) &&
                         <GradeForm 
                           key={field.id}
                           control={form.control} 
                           index={index} 
                           remove={removeGrade}
-                          orientation={watchedOrientation}
+                          availableYears={[1, 2, 3]}
+                          orientation={"Ciclo Basico"}
                         />
                     ))}
                     <Button
@@ -604,8 +609,49 @@ export default function StudentForm({ student }: { student?: Student }) {
                         })}
                         >
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Agregar Calificación
+                        Agregar Calificación (Básico)
                     </Button>
+                </div>
+            </section>
+
+             {/* Calificaciones Ciclo Superior */}
+            <section>
+                <h3 className="text-lg font-medium">Calificaciones de Ciclo Superior</h3>
+                <p className="text-sm text-muted-foreground">Orientación seleccionada: <strong>{orientations.find(o => o.key === watchedOrientation)?.label || 'Ninguna'}</strong></p>
+                <Separator className="my-2" />
+                <div className="space-y-4">
+                    {gradesFields.map((field, index) => (
+                      (field.courseYear > 3) &&
+                        <GradeForm 
+                          key={field.id}
+                          control={form.control} 
+                          index={index} 
+                          remove={removeGrade}
+                          availableYears={[4, 5, 6]}
+                          orientation={watchedOrientation}
+                        />
+                    ))}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!watchedOrientation || watchedOrientation === "Ciclo Basico"}
+                        onClick={() => appendGrade({ 
+                            courseYear: 4, 
+                            actualYear: new Date().getFullYear(),
+                            division: '',
+                            subject: '', 
+                            grade: '', 
+                            book: '', 
+                            folio: '' 
+                        })}
+                        >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Agregar Calificación (Superior)
+                    </Button>
+                     {(!watchedOrientation || watchedOrientation === "Ciclo Basico") && (
+                        <p className="text-xs text-destructive">Debe seleccionar una orientación en "Datos Académicos" para agregar calificaciones del ciclo superior.</p>
+                    )}
                 </div>
             </section>
           </div>
@@ -617,4 +663,3 @@ export default function StudentForm({ student }: { student?: Student }) {
     </Form>
   );
 }
-

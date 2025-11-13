@@ -63,12 +63,19 @@ export default function AdminLayout({
   }, [isUserLoading, user, auth]);
 
   React.useEffect(() => {
-    if (user) {
+    if (user && firestore) {
       const adminRoleDoc = doc(firestore, `roles_admin/${user.uid}`);
       getDoc(adminRoleDoc).then(docSnap => {
         if (!docSnap.exists()) {
-          setDocumentNonBlocking(adminRoleDoc, { isAdmin: true }, {});
+          // Use the non-blocking function which has error handling built-in
+          setDocumentNonBlocking(adminRoleDoc, { uid: user.uid }, {});
         }
+      }).catch(error => {
+        // This will likely be a permission error if the rules are not set up
+        // The error will be handled by the global error listener via onSnapshot in useDoc/useCollection
+        // or by the .catch in the non-blocking update.
+        // We can log it here for debugging if needed, but it's not strictly necessary for the user-facing error.
+        console.error("Error checking or setting admin role: ", error);
       });
     }
   }, [user, firestore]);

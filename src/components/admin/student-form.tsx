@@ -26,7 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import type { Student, Orientation } from "@/lib/definitions";
 import { PlusCircle, Trash2 } from "lucide-react";
-import { subjectsByYear, subjectsByOrientation, orientations } from "@/lib/subjects";
+import { subjectsByOrientation, orientations } from "@/lib/subjects";
 import { useFirestore, addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 
@@ -59,12 +59,12 @@ const studentSchema = z.object({
   course: z.string().min(1, "El curso es requerido."),
   division: z.string().min(1, "La división es requerida."),
   year: z.coerce.number().int().min(1, "Año inválido."),
-  orientation: z.custom<Orientation>().optional(),
+  orientation: z.custom<Orientation>(),
   grades: z.array(gradeSchema).optional(),
   isRegular: z.boolean().default(true),
 });
 
-function GradeForm({ control, index, remove, orientation }: { control: any, index: number, remove: (index: number) => void, orientation?: Orientation }) {
+function GradeForm({ control, index, remove, orientation }: { control: any, index: number, remove: (index: number) => void, orientation: Orientation }) {
   const courseYear = useWatch({
     control,
     name: `grades.${index}.courseYear`,
@@ -73,10 +73,13 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
   const getSubjectsForYear = () => {
     if (!courseYear) return [];
     
-    if (orientation === "Ciclo Basico" && courseYear >= 1 && courseYear <= 3) {
-      return subjectsByYear[courseYear as keyof typeof subjectsByYear];
+    // For years 1, 2, 3, always use "Ciclo Basico"
+    if (courseYear >= 1 && courseYear <= 3) {
+      const basicCycleSubjects = subjectsByOrientation["Ciclo Basico"];
+      return basicCycleSubjects[courseYear as keyof typeof basicCycleSubjects] || [];
     }
     
+    // For years 4, 5, 6, use the selected orientation
     if (courseYear >= 4 && courseYear <= 6 && orientation && orientation !== "Ciclo Basico") {
       const orientationSubjects = subjectsByOrientation[orientation as keyof typeof subjectsByOrientation];
       if (orientationSubjects) {
@@ -158,7 +161,7 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
           render={({ field }) => (
             <FormItem>
               <FormLabel>División</FormLabel>
-               <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="División" />
@@ -174,16 +177,16 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
             </FormItem>
           )}
         />
-        <FormField
+         <FormField
           control={control}
           name={`grades.${index}.subject`}
           render={({ field }) => (
-            <FormItem className="md:col-span-1">
+            <FormItem>
               <FormLabel>Materia</FormLabel>
-               <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!courseYear}>
+              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!courseYear}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccione" />
+                    <SelectValue placeholder="Seleccione Materia" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -196,35 +199,43 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
             </FormItem>
           )}
         />
+      </div>
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
           control={control}
           name={`grades.${index}.grade`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nota</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormLabel>Calificación Final</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-         <FormField
+        <FormField
           control={control}
           name={`grades.${index}.book`}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Libro</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-         <FormField
+        <FormField
           control={control}
           name={`grades.${index}.folio`}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Folio</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -234,6 +245,7 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
   );
 }
 
+
 export default function StudentForm({ student }: { student?: Student }) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -242,8 +254,7 @@ export default function StudentForm({ student }: { student?: Student }) {
     resolver: zodResolver(studentSchema),
     defaultValues: student ? {
       ...student,
-      graduationYear: student.graduationYear || null,
-      orientation: student.orientation || undefined,
+      graduationYear: student.graduationYear ?? null,
     } : {
       fullName: "",
       dni: "",
@@ -257,37 +268,37 @@ export default function StudentForm({ student }: { student?: Student }) {
       course: "",
       division: "",
       year: 1,
+      orientation: "Ciclo Basico",
       grades: [],
       isRegular: true,
-      orientation: 'Ciclo Basico'
     },
   });
 
-  const { fields: responsibleFields, append: appendResponsible, remove: removeResponsible } = useFieldArray({
+  const { fields: responsiblesFields, append: appendResponsible, remove: removeResponsible } = useFieldArray({
     control: form.control,
     name: "responsibles",
   });
-
-  const { fields: gradeFields, append: appendGrade, remove: removeGrade } = useFieldArray({
+  
+  const { fields: gradesFields, append: appendGrade, remove: removeGrade } = useFieldArray({
     control: form.control,
     name: "grades",
   });
-  
-  const watchedOrientation = useWatch({ control: form.control, name: 'orientation' });
+
+  const watchedOrientation = useWatch({
+    control: form.control,
+    name: "orientation",
+  });
 
   function onSubmit(data: z.infer<typeof studentSchema>) {
-    // Ensure graduationYear is null if it's undefined or an empty string, which the form can produce
     const studentData = {
       ...data,
       graduationYear: data.graduationYear || null,
     };
 
     if (student) {
-      // Update existing student
       const studentDocRef = doc(firestore, "students", student.id);
       setDocumentNonBlocking(studentDocRef, studentData, { merge: true });
     } else {
-      // Create new student
       const studentsCollectionRef = collection(firestore, "students");
       addDocumentNonBlocking(studentsCollectionRef, studentData);
     }
@@ -297,181 +308,212 @@ export default function StudentForm({ student }: { student?: Student }) {
       description: `Los datos de ${data.fullName} se han guardado correctamente.`,
     });
   }
-
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <ScrollArea className="h-[70vh] pr-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Datos Personales</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre/s y Apellido/s</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dni"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>DNI</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="cuil"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CUIL</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="birthDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha de Nacimiento</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="birthPlace"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lugar de Nacimiento</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <Separator />
-            
-            <h3 className="text-lg font-medium">Datos de Responsables</h3>
-            {responsibleFields.map((field, index) => (
-              <div key={field.id} className="p-4 border rounded-md relative space-y-4">
-                 {index > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={() => removeResponsible(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                    <span className="sr-only">Eliminar responsable</span>
-                  </Button>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`responsibles.${index}.name`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombre Responsable</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`responsibles.${index}.email`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`responsibles.${index}.phone`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => appendResponsible({ name: "", email: "", phone: "" })}
-            >
-              Agregar Responsable
-            </Button>
-            
-            <Separator />
+          <div className="space-y-6">
 
-            <h3 className="text-lg font-medium">Datos Académicos</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-               <FormField
-                control={form.control}
-                name="entryYear"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Año de Ingreso</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="graduationYear"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Año de Egreso (opcional)</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
+            {/* Datos Personales */}
+            <section>
+              <h3 className="text-lg font-medium">Datos Personales</h3>
+              <Separator className="my-2" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre/s y Apellido/s</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="dni"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>DNI</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cuil"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CUIL</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha de Nacimiento</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="birthPlace"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lugar de Nacimiento</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+
+            {/* Datos de Responsables */}
+            <section>
+              <h3 className="text-lg font-medium">Responsables</h3>
+              <Separator className="my-2" />
+              <div className="space-y-4">
+                {responsiblesFields.map((field, index) => (
+                  <div key={field.id} className="p-4 border rounded-md relative">
+                     <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeResponsible(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                            control={form.control}
+                            name={`responsibles.${index}.name`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Nombre</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        <FormField
+                            control={form.control}
+                            name={`responsibles.${index}.email`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl><Input type="email" {...field} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        <FormField
+                            control={form.control}
+                            name={`responsibles.${index}.phone`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Teléfono</FormLabel>
+                                <FormControl><Input {...field} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                  </div>
+                ))}
+                 <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => appendResponsible({ name: "", email: "", phone: "" })}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Agregar Responsable
+                </Button>
+              </div>
+            </section>
+            
+            {/* Datos Académicos */}
+            <section>
+              <h3 className="text-lg font-medium">Datos Académicos</h3>
+               <Separator className="my-2" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <FormField
+                  control={form.control}
+                  name="entryYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Año de Ingreso</FormLabel>
+                      <FormControl><Input type="number" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="graduationYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Año de Egreso</FormLabel>
+                      <FormControl><Input type="number" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Año en curso</FormLabel>
+                      <FormControl><Input type="number" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="course"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Curso</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="division"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>División</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
                   control={form.control}
                   name="shift"
                   render={({ field }) => (
@@ -479,9 +521,7 @@ export default function StudentForm({ student }: { student?: Student }) {
                       <FormLabel>Turno</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione un turno" />
-                          </SelectTrigger>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="Mañana">Mañana</SelectItem>
@@ -493,91 +533,81 @@ export default function StudentForm({ student }: { student?: Student }) {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="course"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Curso Actual</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="division"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>División Actual</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                  <FormField
-                  control={form.control}
-                  name="year"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Año Actual</FormLabel>
-                       <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
                   control={form.control}
                   name="orientation"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2">
                       <FormLabel>Orientación</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione una orientación" />
-                          </SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder="Seleccione una orientación" /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {orientations.map(o => <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>)}
+                          {orientations.map(o => (
+                            <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-            </div>
-            
-            <Separator />
-
-            <h3 className="text-lg font-medium">Calificaciones</h3>
-            <div className="space-y-4">
-              {gradeFields.map((field, index) => (
-                 <GradeForm
-                  key={field.id}
+                 <FormField
                   control={form.control}
-                  index={index}
-                  remove={removeGrade}
-                  orientation={watchedOrientation}
+                  name="isRegular"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Es Regular</FormLabel>
+                      <Select onValueChange={(value) => field.onChange(value === 'true')} defaultValue={String(field.value)}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="true">Sí</SelectItem>
+                          <SelectItem value="false">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => appendGrade({ courseYear: 1, subject: '', grade: '', book: '', folio: '', actualYear: new Date().getFullYear(), division: '' })}
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Agregar Calificación
-              </Button>
-            </div>
-
+              </div>
+            </section>
+            
+            {/* Calificaciones */}
+            <section>
+                <h3 className="text-lg font-medium">Calificaciones</h3>
+                <Separator className="my-2" />
+                <div className="space-y-4">
+                    {gradesFields.map((field, index) => (
+                        <GradeForm 
+                          key={field.id}
+                          control={form.control} 
+                          index={index} 
+                          remove={removeGrade}
+                          orientation={watchedOrientation}
+                        />
+                    ))}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => appendGrade({ 
+                            courseYear: 1, 
+                            actualYear: new Date().getFullYear(),
+                            division: '',
+                            subject: '', 
+                            grade: '', 
+                            book: '', 
+                            folio: '' 
+                        })}
+                        >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Agregar Calificación
+                    </Button>
+                </div>
+            </section>
           </div>
         </ScrollArea>
         <div className="pt-6 flex justify-end">
@@ -585,7 +615,6 @@ export default function StudentForm({ student }: { student?: Student }) {
         </div>
       </form>
     </Form>
-  )
+  );
 }
 
-    

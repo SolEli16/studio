@@ -1,3 +1,5 @@
+'use client';
+
 import Link from "next/link";
 import {
   Bell,
@@ -12,6 +14,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
+import * as React from 'react';
 
 import {
   SidebarProvider,
@@ -39,12 +42,45 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import AdminSidebarNav from "@/components/admin/admin-sidebar-nav";
+import { useAuth, useUser, initiateAnonymousSignIn, setDocumentNonBlocking } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isUserLoading, user, auth]);
+
+  React.useEffect(() => {
+    if (user) {
+      const adminRoleDoc = doc(firestore, `roles_admin/${user.uid}`);
+      getDoc(adminRoleDoc).then(docSnap => {
+        if (!docSnap.exists()) {
+          setDocumentNonBlocking(adminRoleDoc, { isAdmin: true }, {});
+        }
+      });
+    }
+  }, [user, firestore]);
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Cargando e iniciando sesión...</p>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -70,7 +106,7 @@ export default function AdminLayout({
                   <div className="flex flex-col items-start" data-sidebar="user-info">
                     <span className="text-sm font-medium">Admin</span>
                     <span className="text-xs text-muted-foreground">
-                      secretaria@edugestion.com
+                      {user.email || 'admin@edugestion.com'}
                     </span>
                   </div>
                 </Button>
@@ -80,7 +116,7 @@ export default function AdminLayout({
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">Admin</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      secretaria@edugestion.com
+                       {user.email || 'admin@edugestion.com'}
                     </p>
                   </div>
                 </DropdownMenuLabel>

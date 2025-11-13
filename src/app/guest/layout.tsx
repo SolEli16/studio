@@ -1,5 +1,7 @@
+'use client';
 import Link from "next/link";
 import { Home, Users } from "lucide-react";
+import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import {
@@ -10,12 +12,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
+
 
 export default function GuestLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isUserLoading, user, auth]);
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Cargando...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6 z-50">

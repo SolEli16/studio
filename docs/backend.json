@@ -1,0 +1,412 @@
+{
+  "entities": {
+    "Student": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Student",
+      "type": "object",
+      "description": "Represents a student in the educational institution.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the student entity."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Full name of the student."
+        },
+        "dni": {
+          "type": "string",
+          "description": "Documento Nacional de Identidad (National Identity Document) of the student."
+        },
+        "cuil": {
+          "type": "string",
+          "description": "Código Único de Identificación Laboral (Unique Labor Identification Code) of the student."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the student."
+        },
+        "birthDate": {
+          "type": "string",
+          "description": "Date of birth of the student.",
+          "format": "date"
+        },
+        "birthPlace": {
+          "type": "string",
+          "description": "Place of birth of the student."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the student.",
+          "format": "email"
+        },
+        "responsibleAdult1Phone": {
+          "type": "string",
+          "description": "Phone number of the first responsible adult."
+        },
+        "responsibleAdult2Phone": {
+          "type": "string",
+          "description": "Phone number of the second responsible adult."
+        },
+        "enrollmentYear": {
+          "type": "number",
+          "description": "Year the student enrolled in the level."
+        },
+        "graduationYear": {
+          "type": "number",
+          "description": "Year the student is expected to graduate (or graduated)."
+        },
+        "courseDetailsId": {
+          "type": "string",
+          "description": "Reference to CourseDetails. (Relationship: Student 1:1 CourseDetails)"
+        },
+        "regularityId": {
+          "type": "string",
+          "description": "Reference to Regularity. (Relationship: Student 1:1 Regularity)"
+        }
+      },
+      "required": [
+        "id",
+        "fullName",
+        "dni",
+        "cuil",
+        "address",
+        "birthDate",
+        "birthPlace",
+        "email",
+        "responsibleAdult1Phone",
+        "responsibleAdult2Phone",
+        "enrollmentYear",
+        "graduationYear",
+        "courseDetailsId",
+        "regularityId"
+      ]
+    },
+    "Teacher": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Teacher",
+      "type": "object",
+      "description": "Represents a teacher in the educational institution.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the teacher entity."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Full name of the teacher."
+        },
+        "dni": {
+          "type": "string",
+          "description": "Documento Nacional de Identidad (National Identity Document) of the teacher."
+        },
+        "cuil": {
+          "type": "string",
+          "description": "Código Único de Identificación Laboral (Unique Labor Identification Code) of the teacher."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the teacher."
+        },
+        "birthDate": {
+          "type": "string",
+          "description": "Date of birth of the teacher.",
+          "format": "date"
+        },
+        "birthPlace": {
+          "type": "string",
+          "description": "Place of birth of the teacher."
+        },
+        "emailABC": {
+          "type": "string",
+          "description": "Official email address of the teacher.",
+          "format": "email"
+        },
+        "alternativeEmail": {
+          "type": "string",
+          "description": "Alternative email address of the teacher.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Cell phone number of the teacher."
+        },
+        "titles": {
+          "type": "string",
+          "description": "Titles/Qualifications of the teacher."
+        }
+      },
+      "required": [
+        "id",
+        "fullName",
+        "dni",
+        "cuil",
+        "address",
+        "birthDate",
+        "birthPlace",
+        "emailABC",
+        "alternativeEmail",
+        "phoneNumber",
+        "titles"
+      ]
+    },
+    "CourseDetails": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CourseDetails",
+      "type": "object",
+      "description": "Details about a student's course and year.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the course details entity."
+        },
+        "year": {
+          "type": "number",
+          "description": "The year of the course."
+        },
+        "turn": {
+          "type": "string",
+          "description": "The turn (morning, afternoon, evening) of the course."
+        },
+        "course": {
+          "type": "string",
+          "description": "The course name or identifier."
+        },
+        "yearLevel": {
+          "type": "number",
+          "description": "The year level of the course."
+        }
+      },
+      "required": [
+        "id",
+        "year",
+        "turn",
+        "course",
+        "yearLevel"
+      ]
+    },
+    "Regularity": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Regularity",
+      "type": "object",
+      "description": "Represents the regularity status of a student.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the regularity entity."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current regularity status of the student (e.g., Regular, Irregular)."
+        }
+      },
+      "required": [
+        "id",
+        "status"
+      ]
+    },
+    "CourseAssignment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CourseAssignment",
+      "type": "object",
+      "description": "Represents the assignment of a teacher to a specific course and subject.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the course assignment entity."
+        },
+        "teacherId": {
+          "type": "string",
+          "description": "Reference to Teacher. (Relationship: Teacher 1:N CourseAssignment)"
+        },
+        "courseDetailsId": {
+          "type": "string",
+          "description": "Reference to CourseDetails. (Relationship: CourseDetails 1:N CourseAssignment)"
+        },
+        "schedule": {
+          "type": "string",
+          "description": "The schedule for the course assignment."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject being taught in the course assignment."
+        }
+      },
+      "required": [
+        "id",
+        "teacherId",
+        "courseDetailsId",
+        "schedule",
+        "subject"
+      ]
+    },
+    "Grade": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Grade",
+      "type": "object",
+      "description": "Represents a student's grade in a specific subject.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the grade entity."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to Student. (Relationship: Student 1:N Grade)"
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject for which the grade is given."
+        },
+        "grade": {
+          "type": "number",
+          "description": "The numerical grade value."
+        },
+        "book": {
+          "type": "string",
+          "description": "The book where the grade is recorded."
+        },
+        "folio": {
+          "type": "string",
+          "description": "The folio number where the grade is recorded."
+        },
+        "year": {
+          "type": "number",
+          "description": "The academic year the grade was received."
+        }
+      },
+      "required": [
+        "id",
+        "studentId",
+        "subject",
+        "grade",
+        "book",
+        "folio",
+        "year"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/students/{studentId}",
+        "definition": {
+          "entityName": "Student",
+          "schema": {
+            "$ref": "#/backend/entities/Student"
+          },
+          "description": "Stores student data, including personal and academic information. Includes denormalized data for efficient querying and authorization (if required later).",
+          "params": [
+            {
+              "name": "studentId",
+              "description": "Unique identifier for the student."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teachers/{teacherId}",
+        "definition": {
+          "entityName": "Teacher",
+          "schema": {
+            "$ref": "#/backend/entities/Teacher"
+          },
+          "description": "Stores teacher data, including personal and professional information.",
+          "params": [
+            {
+              "name": "teacherId",
+              "description": "Unique identifier for the teacher."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/course_details/{courseDetailsId}",
+        "definition": {
+          "entityName": "CourseDetails",
+          "schema": {
+            "$ref": "#/backend/entities/CourseDetails"
+          },
+          "description": "Stores details about a specific course, such as year, turn, and course name.",
+          "params": [
+            {
+              "name": "courseDetailsId",
+              "description": "Unique identifier for the course details."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/regularity/{regularityId}",
+        "definition": {
+          "entityName": "Regularity",
+          "schema": {
+            "$ref": "#/backend/entities/Regularity"
+          },
+          "description": "Stores the regularity status of a student. It Includes a studentId property that references back to a student document. Preceptors can update these.",
+          "params": [
+            {
+              "name": "regularityId",
+              "description": "Unique identifier for the regularity status."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/course_assignments/{courseAssignmentId}",
+        "definition": {
+          "entityName": "CourseAssignment",
+          "schema": {
+            "$ref": "#/backend/entities/CourseAssignment"
+          },
+          "description": "Stores information about teacher assignments to courses, including schedule and subject.",
+          "params": [
+            {
+              "name": "courseAssignmentId",
+              "description": "Unique identifier for the course assignment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/grades/{gradeId}",
+        "definition": {
+          "entityName": "Grade",
+          "schema": {
+            "$ref": "#/backend/entities/Grade"
+          },
+          "description": "Stores student grades for specific subjects.",
+          "params": [
+            {
+              "name": "gradeId",
+              "description": "Unique identifier for the grade."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "admin",
+          "schema": {
+            "$ref": "#/backend/entities/Student"
+          },
+          "description": "This collection only stores the existence of a document with the userId as the document id.  Existence implies the user is an admin.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "User ID."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to manage student and teacher data for an educational institution, with role-based access control for administrators and guests (preceptors).  Authorization Independence is achieved through the separation of data into collections with distinct security profiles. Admin actions are segregated under the 'admins' collection. User-owned data (if implemented) would reside under `/users/{userId}/*`. The Regularity updates are handled by preceptors and, even if the data is segregated under `/regularity/{regularityId}`, it still maintains a field that points to the Student in order to facilitate secure listing (QAPs) and filtering. Role-based access is simplified by the separation of data into distinct collections."
+  }
+}

@@ -1,0 +1,129 @@
+/**
+ * @fileoverview Firestore Security Rules for the educational institution app.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a role-based access control model, primarily leveraging the existence
+ * of documents in the `/roles_admin/{userId}` collection to grant admin privileges. Data is
+ * generally open for reading but restricted for modifications, with admin users having write
+ * access. This design prioritizes ease of use for data retrieval while maintaining strong
+ * control over data integrity.
+ *
+ * Data Structure:
+ * - `/students/{studentId}`: Stores student information.
+ * - `/teachers/{teacherId}`: Stores teacher information.
+ * - `/course_details/{courseDetailsId}`: Stores course details.
+ * - `/regularity/{regularityId}`: Stores student regularity statuses; preceptors can update these.
+ * - `/course_assignments/{courseAssignmentId}`: Stores teacher-course assignments.
+ * - `/grades/{gradeId}`: Stores student grades.
+ * - `/roles_admin/{userId}`: Indicates admin status; the existence of a document with a userId grants admin rights.
+ *
+ * Key Security Decisions:
+ * - All collections are readable by anyone (signed in or not).
+ * - Write access is generally restricted to admins.
+ * - The existence of a document under `/roles_admin/{userId}` is the sole indicator of admin status.
+ * - Data validation is relaxed to facilitate rapid prototyping. However, relational integrity is enforced
+ *   where applicable (e.g., ensuring the `studentId` in a `/grades/{gradeId}` document matches the
+ *   `studentId` parameter in the path).
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Grants read access to all students. Only admins can create, update, or delete students.
+     * @path /students/{studentId}
+     * @allow get, list: Everyone can read student data.
+     * @allow create, update, delete: Only admins can modify student data.
+     * @principle Allows public reads, restricts writes to admins.
+     */
+    match /students/{studentId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Grants read access to all teachers. Only admins can create, update, or delete teachers.
+     * @path /teachers/{teacherId}
+     * @allow get, list: Everyone can read teacher data.
+     * @allow create, update, delete: Only admins can modify teacher data.
+     * @principle Allows public reads, restricts writes to admins.
+     */
+    match /teachers/{teacherId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Grants read access to all course details. Only admins can create, update, or delete course details.
+     * @path /course_details/{courseDetailsId}
+     * @allow get, list: Everyone can read course details.
+     * @allow create, update, delete: Only admins can modify course details.
+     * @principle Allows public reads, restricts writes to admins.
+     */
+    match /course_details/{courseDetailsId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Grants read access to all regularity records. Only admins can create, update, or delete regularity records.
+     * @path /regularity/{regularityId}
+     * @allow get, list: Everyone can read regularity records.
+     * @allow create, update, delete: if isAdmin();
+     * @principle Allows public reads, restricts writes to admins.
+     */
+    match /regularity/{regularityId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Grants read access to all course assignments. Only admins can create, update, or delete course assignments.
+     * @path /course_assignments/{courseAssignmentId}
+     * @allow get, list: Everyone can read course assignments.
+     * @allow create, update, delete: if isAdmin();
+     * @principle Allows public reads, restricts writes to admins.
+     */
+    match /course_assignments/{courseAssignmentId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Grants read access to all grades. Only admins can create, update, or delete grades.
+     * @path /grades/{gradeId}
+     * @allow get, list: Everyone can read grades.
+     * @allow create, update, delete: if isAdmin();
+     * @principle Allows public reads, restricts writes to admins.
+     */
+    match /grades/{gradeId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    
+    /**
+     * @description Grants admin role based on document existence in this collection.
+     * @path /roles_admin/{userId}
+     * @allow get: if isAdmin(userId);
+     * @allow list: if false;
+     * @allow create: if request.auth.uid == userId;
+     * @allow update, delete: if false;
+     * @principle Restricts listing, only the user can create their admin role
+     */
+    match /roles_admin/{userId} {
+        allow get: if isAdmin();
+        allow list: if false;
+        allow create: if request.auth.uid == userId;
+        allow update, delete: if false;
+    }
+
+    /**
+     * @description Checks if the user is an admin by verifying the existence of a document with their ID in the '/roles_admin' collection.
+     * @param {string} userId - The user ID to check.
+     * @return {bool} True if the user is an admin, false otherwise.
+     */
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+  }
+}

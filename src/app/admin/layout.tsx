@@ -71,11 +71,14 @@ export default function AdminLayout({
           setDocumentNonBlocking(adminRoleDoc, { uid: user.uid }, {});
         }
       }).catch(error => {
-        // This will likely be a permission error if the rules are not set up
-        // The error will be handled by the global error listener via onSnapshot in useDoc/useCollection
-        // or by the .catch in the non-blocking update.
-        // We can log it here for debugging if needed, but it's not strictly necessary for the user-facing error.
+        // This will likely be a permission error if the rules are not set up.
+        // The error will be handled by the global error listener via the .catch() 
+        // in setDocumentNonBlocking. We just need to make sure we call it correctly.
+        // The console.error below is for local debugging, but not essential for the user.
         console.error("Error checking or setting admin role: ", error);
+        // We ensure a non-blocking write attempt is made even on error,
+        // which will then be caught by our global handler.
+        setDocumentNonBlocking(adminRoleDoc, { uid: user.uid }, {});
       });
     }
   }, [user, firestore]);

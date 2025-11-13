@@ -140,7 +140,7 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Año" />
-                  </SelectTrigger>
+                  </Trigger>
                 </FormControl>
                 <SelectContent>
                   {years.map(year => (
@@ -242,7 +242,7 @@ export default function StudentForm({ student }: { student?: Student }) {
     resolver: zodResolver(studentSchema),
     defaultValues: student ? {
       ...student,
-      graduationYear: student.graduationYear || undefined,
+      graduationYear: student.graduationYear || null,
       orientation: student.orientation || undefined,
     } : {
       fullName: "",
@@ -252,7 +252,7 @@ export default function StudentForm({ student }: { student?: Student }) {
       birthPlace: "",
       responsibles: [{ name: "", email: "", phone: "" }],
       entryYear: new Date().getFullYear(),
-      graduationYear: undefined,
+      graduationYear: null,
       shift: "Mañana",
       course: "",
       division: "",
@@ -276,14 +276,20 @@ export default function StudentForm({ student }: { student?: Student }) {
   const watchedOrientation = useWatch({ control: form.control, name: 'orientation' });
 
   function onSubmit(data: z.infer<typeof studentSchema>) {
+    // Ensure graduationYear is null if it's undefined or an empty string, which the form can produce
+    const studentData = {
+      ...data,
+      graduationYear: data.graduationYear || null,
+    };
+
     if (student) {
       // Update existing student
       const studentDocRef = doc(firestore, "students", student.id);
-      setDocumentNonBlocking(studentDocRef, data, { merge: true });
+      setDocumentNonBlocking(studentDocRef, studentData, { merge: true });
     } else {
       // Create new student
       const studentsCollectionRef = collection(firestore, "students");
-      addDocumentNonBlocking(studentsCollectionRef, data);
+      addDocumentNonBlocking(studentsCollectionRef, studentData);
     }
 
     toast({

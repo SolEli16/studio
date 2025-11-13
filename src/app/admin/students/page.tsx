@@ -1,3 +1,4 @@
+'use client';
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { STUDENTS } from "@/lib/mock-data";
+import { useCollection, useFirestore } from "@/firebase";
 import StudentsTable from "@/components/admin/students-table";
 import {
   Dialog,
@@ -18,9 +19,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import StudentForm from "@/components/admin/student-form";
+import { collection } from "firebase/firestore";
+import { useMemoFirebase } from "@/firebase/provider";
 
 export default function AdminStudentsPage() {
-  const students = STUDENTS;
+  const firestore = useFirestore();
+  const studentsQuery = useMemoFirebase(() => collection(firestore, 'students'), [firestore]);
+  const { data: students, isLoading } = useCollection(studentsQuery);
 
   return (
     <Card>
@@ -54,7 +59,7 @@ export default function AdminStudentsPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <StudentsTable students={students} />
+        {isLoading ? <p>Cargando alumnos...</p> : <StudentsTable students={students || []} />}
       </CardContent>
     </Card>
   );

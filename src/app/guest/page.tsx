@@ -1,3 +1,4 @@
+'use client';
 import {
   Card,
   CardContent,
@@ -5,11 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { STUDENTS } from "@/lib/mock-data";
+import { useCollection, useFirestore } from "@/firebase";
 import GuestStudentsTable from "@/components/guest/guest-students-table";
+import { collection } from "firebase/firestore";
+import { useMemoFirebase } from "@/firebase/provider";
+
 
 export default function GuestDashboard() {
-  const students = STUDENTS;
+  const firestore = useFirestore();
+  const studentsQuery = useMemoFirebase(() => collection(firestore, 'students'), [firestore]);
+  const { data: students, isLoading } = useCollection(studentsQuery);
 
   return (
     <Card>
@@ -20,7 +26,7 @@ export default function GuestDashboard() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <GuestStudentsTable students={students} />
+        {isLoading ? <p>Cargando alumnos...</p> : <GuestStudentsTable students={students || []} />}
       </CardContent>
     </Card>
   );

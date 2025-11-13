@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import * as React from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -30,13 +30,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import StudentForm from "./student-form";
+import { useFirestore, deleteDocumentNonBlocking } from "@/firebase";
+import { doc } from "firebase/firestore";
 
-export default function StudentsTable({ students: initialStudents }: { students: Student[] }) {
-  const [students, setStudents] = React.useState(initialStudents);
+export default function StudentsTable({ students }: { students: Student[] }) {
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   const handleDelete = (studentId: string) => {
-    setStudents(students.filter((student) => student.id !== studentId));
+    const studentDocRef = doc(firestore, "students", studentId);
+    deleteDocumentNonBlocking(studentDocRef);
     toast({
       title: "Alumno eliminado",
       description: "El registro del alumno ha sido eliminado exitosamente.",

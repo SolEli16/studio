@@ -1,3 +1,4 @@
+'use client';
 import Link from "next/link";
 import { ArrowUpRight, GraduationCap, BookUser } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,12 +9,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { STUDENTS, TEACHERS } from "@/lib/mock-data";
+import { useCollection } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
+import { useMemoFirebase } from "@/firebase/provider";
 
 export default function AdminDashboard() {
-  const totalStudents = STUDENTS.length;
-  const totalTeachers = TEACHERS.length;
-  const regularStudents = STUDENTS.filter(s => s.isRegular).length;
+  const firestore = useFirestore();
+  
+  const studentsQuery = useMemoFirebase(() => collection(firestore, 'students'), [firestore]);
+  const teachersQuery = useMemoFirebase(() => collection(firestore, 'teachers'), [firestore]);
+
+  const { data: students } = useCollection(studentsQuery);
+  const { data: teachers } = useCollection(teachersQuery);
+
+  const totalStudents = students?.length ?? 0;
+  const totalTeachers = teachers?.length ?? 0;
+  const regularStudents = students?.filter(s => s.isRegular).length ?? 0;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

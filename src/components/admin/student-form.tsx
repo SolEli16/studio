@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Student, Orientation } from "@/lib/definitions";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { subjectsByYear, subjectsByOrientation, orientations } from "@/lib/subjects";
+import { useFirestore, addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
 
 const responsibleSchema = z.object({
   name: z.string().min(1, "El nombre es requerido."),
@@ -59,6 +61,7 @@ const studentSchema = z.object({
   year: z.coerce.number().int().min(1, "Año inválido."),
   orientation: z.custom<Orientation>().optional(),
   grades: z.array(gradeSchema).optional(),
+  isRegular: z.boolean().default(true),
 });
 
 function GradeForm({ control, index, remove, orientation }: { control: any, index: number, remove: (index: number) => void, orientation?: Orientation }) {
@@ -231,9 +234,10 @@ function GradeForm({ control, index, remove, orientation }: { control: any, inde
   );
 }
 
-
 export default function StudentForm({ student }: { student?: Student }) {
   const { toast } = useToast();
+  const firestore = useFirestore();
+
   const form = useForm<z.infer<typeof studentSchema>>({
     resolver: zodResolver(studentSchema),
     defaultValues: student ? {
@@ -254,6 +258,8 @@ export default function StudentForm({ student }: { student?: Student }) {
       division: "",
       year: 1,
       grades: [],
+      isRegular: true,
+      orientation: 'Ciclo Basico'
     },
   });
 
@@ -270,11 +276,20 @@ export default function StudentForm({ student }: { student?: Student }) {
   const watchedOrientation = useWatch({ control: form.control, name: 'orientation' });
 
   function onSubmit(data: z.infer<typeof studentSchema>) {
+    if (student) {
+      // Update existing student
+      const studentDocRef = doc(firestore, "students", student.id);
+      setDocumentNonBlocking(studentDocRef, data, { merge: true });
+    } else {
+      // Create new student
+      const studentsCollectionRef = collection(firestore, "students");
+      addDocumentNonBlocking(studentsCollectionRef, data);
+    }
+
     toast({
       title: `Alumno ${student ? 'actualizado' : 'creado'}`,
       description: `Los datos de ${data.fullName} se han guardado correctamente.`,
     });
-    console.log(data);
   }
 
   return (
@@ -564,5 +579,5 @@ export default function StudentForm({ student }: { student?: Student }) {
         </div>
       </form>
     </Form>
-  );
+  )
 }

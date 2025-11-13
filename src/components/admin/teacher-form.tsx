@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,8 @@ import type { Teacher } from "@/lib/definitions";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { allSubjects } from "@/lib/subjects";
+import { useFirestore, addDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
 
 
 const courseAssignmentSchema = z.object({
@@ -47,6 +49,8 @@ const teacherSchema = z.object({
 
 export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
   const { toast } = useToast();
+  const firestore = useFirestore();
+
   const form = useForm<z.infer<typeof teacherSchema>>({
     resolver: zodResolver(teacherSchema),
     defaultValues: teacher ? {
@@ -74,12 +78,22 @@ export default function TeacherForm({ teacher }: { teacher?: Teacher }) {
   });
 
   function onSubmit(data: z.infer<typeof teacherSchema>) {
+    const teacherData = { ...data, titles: data.titles.split(',').map(t => t.trim()) };
+
+    if (teacher) {
+      // Update existing teacher
+      const teacherDocRef = doc(firestore, "teachers", teacher.id);
+      setDocumentNonBlocking(teacherDocRef, teacherData, { merge: true });
+    } else {
+      // Create new teacher
+      const teachersCollectionRef = collection(firestore, "teachers");
+      addDocumentNonBlocking(teachersCollectionRef, teacherData);
+    }
+    
     toast({
       title: `Docente ${teacher ? 'actualizado' : 'creado'}`,
       description: `Los datos de ${data.fullName} se han guardado correctamente.`,
     });
-    // Here you would typically handle form submission, e.g., API call
-    console.log({ ...data, titles: data.titles.split(',').map(t => t.trim()) });
   }
 
   return (

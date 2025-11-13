@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import * as React from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -29,13 +29,16 @@ import { Button } from "@/components/ui/button";
 import type { Teacher } from "@/lib/definitions";
 import { useToast } from "@/hooks/use-toast";
 import TeacherForm from "./teacher-form";
+import { useFirestore, deleteDocumentNonBlocking } from "@/firebase";
+import { doc } from "firebase/firestore";
 
-export default function TeachersTable({ teachers: initialTeachers }: { teachers: Teacher[] }) {
-  const [teachers, setTeachers] = React.useState(initialTeachers);
+export default function TeachersTable({ teachers }: { teachers: Teacher[] }) {
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   const handleDelete = (teacherId: string) => {
-    setTeachers(teachers.filter((teacher) => teacher.id !== teacherId));
+    const teacherDocRef = doc(firestore, "teachers", teacherId);
+    deleteDocumentNonBlocking(teacherDocRef);
     toast({
       title: "Docente eliminado",
       description: "El registro del docente ha sido eliminado exitosamente.",

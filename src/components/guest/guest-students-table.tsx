@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import * as React from "react";
 import { Eye } from "lucide-react";
@@ -26,11 +26,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import StudentDetails from "./student-details";
+import { useFirestore, updateDocumentNonBlocking } from "@/firebase";
+import { doc } from "firebase/firestore";
 
-export default function GuestStudentsTable({ students: initialStudents }: { students: Student[] }) {
-  const [students, setStudents] = React.useState(initialStudents);
+export default function GuestStudentsTable({ students }: { students: Student[] }) {
   const [isFriday, setIsFriday] = React.useState(false);
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   React.useEffect(() => {
     const today = new Date();
@@ -38,11 +40,8 @@ export default function GuestStudentsTable({ students: initialStudents }: { stud
   }, []);
 
   const handleRegularityChange = (studentId: string, isRegular: boolean) => {
-    setStudents(
-      students.map((student) =>
-        student.id === studentId ? { ...student, isRegular } : student
-      )
-    );
+    const studentDocRef = doc(firestore, "students", studentId);
+    updateDocumentNonBlocking(studentDocRef, { isRegular });
     toast({
       title: "Estado de regularidad actualizado",
       description: `El estado de ${students.find(s=>s.id === studentId)?.fullName} se ha actualizado.`,

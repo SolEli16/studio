@@ -65,12 +65,19 @@ export default function AdminLayout({
 }) {
   const auth = useAuth();
   const { user } = useUser();
-  const router = useRouter();
   const pathname = usePathname();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    window.location.href = '/';
+    try {
+      await signOut(auth);
+      // Force a full page reload to the homepage. This is more robust
+      // than router.push and prevents race conditions with the auth wall.
+      window.location.href = '/';
+    } catch (error) {
+      console.error("Error signing out: ", error);
+      // Even if sign-out fails, try to navigate away.
+      window.location.href = '/';
+    }
   };
   
   if (pathname === '/admin/login') {

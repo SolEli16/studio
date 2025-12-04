@@ -14,23 +14,28 @@ import { useCollection, useFirestore, useUser, useAuth, initiateAnonymousSignIn 
 import GuestStudentsTable from "@/components/guest/guest-students-table";
 import { collection } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/provider";
-
+import { Button } from "@/components/ui/button";
 
 export default function GuestDashboard() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
+
   const studentsQuery = useMemoFirebase(() => collection(firestore, 'students'), [firestore]);
-  const { data: students, isLoading: studentsLoading } = useCollection(studentsQuery);
+  const { data: students, isLoading: studentsLoading } = useCollection(user ? studentsQuery : null); // Only query if user exists
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  React.useEffect(() => {
-    // If loading is finished and there's no user at all, initiate anonymous sign-in.
-    // This will only run when a completely unauthenticated user visits this page.
-    if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(auth);
+  const handleGuestLogin = async () => {
+    setIsSigningIn(true);
+    try {
+      await initiateAnonymousSignIn(auth);
+      // onAuthStateChanged will handle the rest
+    } catch (error) {
+      console.error("Guest sign-in failed", error);
+      setIsSigningIn(false);
     }
-  }, [isUserLoading, user, auth]);
+  };
 
   const filteredStudents = React.useMemo(() => {
     if (!students) return [];
@@ -40,14 +45,34 @@ export default function GuestDashboard() {
     );
   }, [students, searchTerm]);
 
-  // Show a loading state until the user status is confirmed and they are logged in.
-  if (isUserLoading || !user) {
-     return (
+  if (isUserLoading || isSigningIn) {
+    return (
       <div className="flex items-center justify-center h-full">
-        <p>Iniciando sesión de invitado...</p>
+        <p>Cargando...</p>
       </div>
     );
   }
+
+  if (!user) {
+    return (
+        <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
+            <Card className="max-w-md">
+                <CardHeader>
+                    <CardTitle>Acceso de Invitado</CardTitle>
+                    <CardDescription>
+                        Para ver la información de los alumnos, por favor inicie una sesión de invitado.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={handleGuestLogin} className="w-full">
+                        Ingresar como Invitado
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
+
 
   return (
     <Card>

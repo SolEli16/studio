@@ -1,7 +1,7 @@
 
 'use client';
 import Link from "next/link";
-import { Home, Users, LogOut } from "lucide-react";
+import { Users, LogOut } from "lucide-react";
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from "firebase/auth";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 
 export default function GuestLayout({

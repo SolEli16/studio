@@ -3,18 +3,8 @@
 
 import Link from "next/link";
 import {
-  Bell,
-  BookUser,
-  GraduationCap,
-  Home,
-  LineChart,
-  Package,
-  Package2,
-  PanelLeft,
-  Search,
-  ShoppingCart,
-  Users,
   LogOut,
+  Users,
 } from "lucide-react";
 import * as React from 'react';
 import { useRouter, usePathname } from "next/navigation";
@@ -24,9 +14,6 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
   SidebarInset,
   SidebarTrigger,
@@ -40,10 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
-import { Badge } from "@/components/ui/badge";
 import AdminSidebarNav from "@/components/admin/admin-sidebar-nav";
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from "firebase/auth";
@@ -53,7 +37,7 @@ function AdminAuthWall({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    // Si la carga ha terminado y el usuario no es un admin válido, redirigir.
+    // Si la carga ha terminado y el usuario no es un admin válido (no existe o es anónimo), redirigir.
     if (!isUserLoading && (!user || user.isAnonymous)) {
       router.replace('/admin/login');
     }
@@ -84,7 +68,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const auth = useAuth();
-  const { user } = useUser(); // Solo para obtener datos del usuario, no para lógica de Auth
+  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 

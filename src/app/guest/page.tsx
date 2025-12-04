@@ -23,16 +23,18 @@ export default function GuestDashboard() {
   const [isSigningIn, setIsSigningIn] = React.useState(false);
 
   const studentsQuery = useMemoFirebase(() => collection(firestore, 'students'), [firestore]);
-  const { data: students, isLoading: studentsLoading } = useCollection(user ? studentsQuery : null); // Only query if user exists
+  // Solo obtener los datos si hay un usuario (anónimo o no)
+  const { data: students, isLoading: studentsLoading } = useCollection(user ? studentsQuery : null);
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const handleGuestLogin = async () => {
     setIsSigningIn(true);
     try {
       await initiateAnonymousSignIn(auth);
-      // onAuthStateChanged will handle the rest
+      // El hook useUser se encargará de actualizar el estado del usuario
     } catch (error) {
       console.error("Guest sign-in failed", error);
+    } finally {
       setIsSigningIn(false);
     }
   };
@@ -64,8 +66,8 @@ export default function GuestDashboard() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Button onClick={handleGuestLogin} className="w-full">
-                        Ingresar como Invitado
+                    <Button onClick={handleGuestLogin} disabled={isSigningIn} className="w-full">
+                        {isSigningIn ? 'Ingresando...' : 'Ingresar como Invitado'}
                     </Button>
                 </CardContent>
             </Card>

@@ -9,17 +9,26 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, useUser, useAuth, initiateAnonymousSignIn } from "@/firebase";
 import GuestStudentsTable from "@/components/guest/guest-students-table";
 import { collection } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/provider";
 
 
 export default function GuestDashboard() {
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const studentsQuery = useMemoFirebase(() => collection(firestore, 'students'), [firestore]);
-  const { data: students, isLoading } = useCollection(studentsQuery);
+  const { data: students, isLoading: studentsLoading } = useCollection(studentsQuery);
   const [searchTerm, setSearchTerm] = React.useState('');
+
+  React.useEffect(() => {
+    // If loading is finished and there's no user, initiate anonymous sign-in.
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isUserLoading, user, auth]);
 
   const filteredStudents = React.useMemo(() => {
     if (!students) return [];
@@ -28,6 +37,15 @@ export default function GuestDashboard() {
       student.dni.includes(searchTerm)
     );
   }, [students, searchTerm]);
+
+  // Show a loading state until the user status is confirmed and they are logged in.
+  if (isUserLoading || !user) {
+     return (
+      <div className="flex items-center justify-center h-full">
+        <p>Iniciando sesión de invitado...</p>
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -48,7 +66,7 @@ export default function GuestDashboard() {
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? <p>Cargando alumnos...</p> : <GuestStudentsTable students={filteredStudents || []} />}
+        {studentsLoading ? <p>Cargando alumnos...</p> : <GuestStudentsTable students={filteredStudents || []} />}
       </CardContent>
     </Card>
   );

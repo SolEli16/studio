@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { signOut } from "firebase/auth";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -27,21 +27,14 @@ export default function GuestLayout({
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-  const pathname = usePathname();
-
-  React.useEffect(() => {
-    // Only initiate anonymous sign-in if we are trying to access the guest area without a user
-    if (!isUserLoading && !user && pathname.startsWith('/guest')) {
-      initiateAnonymousSignIn(auth);
-    }
-  }, [isUserLoading, user, auth, pathname]);
 
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/');
   };
 
-  if (isUserLoading || (!user && pathname.startsWith('/guest'))) {
+  // The loading screen will be handled by the page itself
+  if (isUserLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Cargando...</p>
@@ -49,9 +42,9 @@ export default function GuestLayout({
     );
   }
 
-  // If there's no user and we are not in a guest path (e.g., during logout navigation), render nothing.
+  // If there's no user, let the page handle redirection or login initiation.
   if (!user) {
-    return null;
+    return <>{children}</>
   }
 
   return (

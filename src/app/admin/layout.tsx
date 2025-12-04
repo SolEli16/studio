@@ -70,7 +70,7 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/'); 
+    window.location.href = '/';
   };
   
   if (pathname === '/admin/login') {

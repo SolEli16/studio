@@ -1,6 +1,7 @@
+
 'use client';
 import Link from "next/link";
-import { Home, Users } from "lucide-react";
+import { Home, Users, LogOut } from "lucide-react";
 import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
@@ -13,6 +14,8 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useAuth, useUser, initiateAnonymousSignIn } from '@/firebase';
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 
 export default function GuestLayout({
@@ -23,12 +26,18 @@ export default function GuestLayout({
 
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
+  const router = useRouter();
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
       initiateAnonymousSignIn(auth);
     }
   }, [isUserLoading, user, auth]);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
 
   if (isUserLoading || !user) {
     return (
@@ -64,8 +73,9 @@ export default function GuestLayout({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/">Cerrar Sesión</Link>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar Sesión</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

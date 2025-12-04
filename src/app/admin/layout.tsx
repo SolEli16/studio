@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -13,8 +14,10 @@ import {
   Search,
   ShoppingCart,
   Users,
+  LogOut,
 } from "lucide-react";
 import * as React from 'react';
+import { useRouter } from "next/navigation";
 
 import {
   SidebarProvider,
@@ -42,10 +45,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import AdminSidebarNav from "@/components/admin/admin-sidebar-nav";
-import { useAuth, useUser, initiateAnonymousSignIn, setDocumentNonBlocking } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from "firebase/auth";
 
 export default function AdminLayout({
   children,
@@ -54,39 +55,23 @@ export default function AdminLayout({
 }) {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
+  const router = useRouter();
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(auth);
+      router.replace('/admin/login');
     }
-  }, [isUserLoading, user, auth]);
+  }, [isUserLoading, user, router]);
 
-  React.useEffect(() => {
-    if (user && firestore) {
-      const adminRoleDoc = doc(firestore, `roles_admin/${user.uid}`);
-      getDoc(adminRoleDoc).then(docSnap => {
-        if (!docSnap.exists()) {
-          // Use the non-blocking function which has error handling built-in
-          setDocumentNonBlocking(adminRoleDoc, { uid: user.uid }, {});
-        }
-      }).catch(error => {
-        // This will likely be a permission error if the rules are not set up.
-        // The error will be handled by the global error listener via the .catch() 
-        // in setDocumentNonBlocking. We just need to make sure we call it correctly.
-        // The console.error below is for local debugging, but not essential for the user.
-        console.error("Error checking or setting admin role: ", error);
-        // We ensure a non-blocking write attempt is made even on error,
-        // which will then be caught by our global handler.
-        setDocumentNonBlocking(adminRoleDoc, { uid: user.uid }, {});
-      });
-    }
-  }, [user, firestore]);
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/'); // Redirect to home after logout
+  };
 
   if (isUserLoading || !user) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Cargando e iniciando sesión...</p>
+      <div className="flex items-center justify-center h-screen bg-background">
+        <p>Cargando y verificando sesión...</p>
       </div>
     );
   }
@@ -131,8 +116,9 @@ export default function AdminLayout({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/">Cerrar Sesión</Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Cerrar Sesión</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

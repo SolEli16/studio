@@ -1,3 +1,4 @@
+
 'use client';
 import Link from "next/link";
 import { ArrowUpRight, GraduationCap, BookUser } from "lucide-react";
@@ -20,8 +21,8 @@ export default function AdminDashboard() {
   const studentsQuery = useMemoFirebase(() => collection(firestore, 'students'), [firestore]);
   const teachersQuery = useMemoFirebase(() => collection(firestore, 'teachers'), [firestore]);
 
-  const { data: students } = useCollection(studentsQuery);
-  const { data: teachers } = useCollection(teachersQuery);
+  const { data: students, isLoading: studentsLoading } = useCollection(studentsQuery);
+  const { data: teachers, isLoading: teachersLoading } = useCollection(teachersQuery);
 
   const totalStudents = students?.length ?? 0;
   const totalTeachers = teachers?.length ?? 0;
@@ -37,9 +38,9 @@ export default function AdminDashboard() {
           <GraduationCap className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalStudents}</div>
+          <div className="text-2xl font-bold">{studentsLoading ? '...' : totalStudents}</div>
           <p className="text-xs text-muted-foreground">
-            {regularStudents} alumnos regulares
+            {studentsLoading ? '...' : `${regularStudents} alumnos regulares`}
           </p>
         </CardContent>
       </Card>
@@ -51,7 +52,7 @@ export default function AdminDashboard() {
           <BookUser className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalTeachers}</div>
+          <div className="text-2xl font-bold">{teachersLoading ? '...' : totalTeachers}</div>
           <p className="text-xs text-muted-foreground">
             Personal activo en la institución
           </p>

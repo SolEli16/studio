@@ -48,40 +48,19 @@ import AdminSidebarNav from "@/components/admin/admin-sidebar-nav";
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from "firebase/auth";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const auth = useAuth();
+function AdminAuthWall({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-  const pathname = usePathname();
 
   React.useEffect(() => {
-    if (isUserLoading) return; // Wait until user status is resolved
-
-    const isLoginPage = pathname === '/admin/login';
-
-    // If no user or user is anonymous, and not on login page, redirect to login
-    if ((!user || user.isAnonymous) && !isLoginPage) {
+    // Si la carga ha terminado y el usuario no es un admin válido, redirigir.
+    if (!isUserLoading && (!user || user.isAnonymous)) {
       router.replace('/admin/login');
     }
+  }, [isUserLoading, user, router]);
 
-    // If user is a logged-in admin but on login page, redirect to dashboard
-    if (user && !user.isAnonymous && isLoginPage) {
-      router.replace('/admin');
-    }
-  }, [isUserLoading, user, router, pathname]);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    // The useEffect will handle redirection to the login page
-    router.push('/'); 
-  };
-
-  // While loading, show a loading screen (unless it's the login page itself)
-  if (isUserLoading && pathname !== '/admin/login') {
+  // Mientras se verifica el usuario, mostrar una pantalla de carga.
+  if (isUserLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <p>Verificando sesión...</p>
@@ -89,75 +68,97 @@ export default function AdminLayout({
     );
   }
 
-  // If we are on the login page, just render the children (the login form)
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
-
-  // If there's no authenticated (non-anonymous) user, don't render the layout
+  // Si después de cargar, el usuario no es un admin válido, no renderizar nada mientras redirige.
   if (!user || user.isAnonymous) {
     return null;
   }
 
+  // Si es un admin válido, mostrar el contenido.
+  return <>{children}</>;
+}
+
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const auth = useAuth();
+  const { user } = useUser(); // Solo para obtener datos del usuario, no para lógica de Auth
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/'); 
+  };
+  
+  // La página de login no debe tener el layout de administrador
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2" data-sidebar="header-content">
-            <Logo className="w-6 h-6 text-primary" />
-            <span className="text-lg font-semibold">EduGestion</span>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <AdminSidebarNav />
-        </SidebarContent>
-        <SidebarFooter>
-           <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-left gap-2 p-2 h-auto"
-                >
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div className="flex flex-col items-start" data-sidebar="user-info">
-                    <span className="text-sm font-medium">Admin</span>
-                    <span className="text-xs text-muted-foreground">
-                      {user?.email || 'admin@edugestion.com'}
-                    </span>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Admin</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                       {user?.email || 'admin@edugestion.com'}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-card px-6">
-          <SidebarTrigger className="md:hidden" />
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold md:text-xl">Panel de Administrador</h1>
-          </div>
-        </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <AdminAuthWall>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2" data-sidebar="header-content">
+              <Logo className="w-6 h-6 text-primary" />
+              <span className="text-lg font-semibold">EduGestion</span>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <AdminSidebarNav />
+          </SidebarContent>
+          <SidebarFooter>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-left gap-2 p-2 h-auto"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start" data-sidebar="user-info">
+                      <span className="text-sm font-medium">Admin</span>
+                      <span className="text-xs text-muted-foreground">
+                        {user?.email || 'admin@edugestion.com'}
+                      </span>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Admin</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email || 'admin@edugestion.com'}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar Sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <header className="flex h-14 items-center gap-4 border-b bg-card px-6">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold md:text-xl">Panel de Administrador</h1>
+            </div>
+          </header>
+          <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </AdminAuthWall>
   );
 }

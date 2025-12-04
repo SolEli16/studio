@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -48,28 +48,31 @@ export default function AdminLoginPage() {
     },
   });
 
+  // Redirigir si un administrador ya está logueado
   React.useEffect(() => {
-    if (!isUserLoading && user) {
+    if (!isUserLoading && user && !user.isAnonymous) {
       router.replace('/admin');
     }
   }, [user, isUserLoading, router]);
 
+
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      // The useEffect will handle redirection on successful login
+      // El useEffect se encargará de la redirección al cambiar el estado del usuario
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Error de inicio de sesión',
         description: 'El correo o la contraseña son incorrectos. Por favor, intenta de nuevo.',
       });
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   }
 
-  if (isUserLoading || user) {
+  // Mostrar pantalla de carga mientras se verifica la sesión o si ya hay un admin logueado (esperando la redirección)
+  if (isUserLoading || (user && !user.isAnonymous)) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <p>Cargando...</p>
@@ -101,7 +104,7 @@ export default function AdminLoginPage() {
                         type="email"
                         placeholder="admin@edugestion.com"
                         {...field}
-                        disabled={isLoading}
+                        disabled={isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -115,14 +118,14 @@ export default function AdminLoginPage() {
                   <FormItem>
                     <FormLabel>Contraseña</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
+                      <Input type="password" placeholder="••••••••" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Ingresando...' : 'Ingresar'}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Ingresando...' : 'Ingresar'}
               </Button>
             </form>
           </Form>

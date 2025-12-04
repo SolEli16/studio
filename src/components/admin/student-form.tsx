@@ -478,7 +478,7 @@ export default function StudentForm({ student }: { student?: Student }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Año de Egreso</FormLabel>
-                      <FormControl><Input type="number" {...field} /></FormControl>
+                      <FormControl><Input type="number" {...field} value={field.value ?? ""} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

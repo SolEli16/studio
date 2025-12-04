@@ -71,7 +71,7 @@ export default function AdminLayout({
   if (isUserLoading || !user) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
-        <p>Cargando y verificando sesión...</p>
+        <p>Verificando sesión...</p>
       </div>
     );
   }

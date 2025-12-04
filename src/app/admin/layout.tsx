@@ -59,16 +59,28 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   React.useEffect(() => {
-    if (!isUserLoading && !user && pathname !== '/admin/login') {
+    if (isUserLoading) return; // Wait until user status is resolved
+
+    const isLoginPage = pathname === '/admin/login';
+
+    // If no user or user is anonymous, and not on login page, redirect to login
+    if ((!user || user.isAnonymous) && !isLoginPage) {
       router.replace('/admin/login');
+    }
+
+    // If user is a logged-in admin but on login page, redirect to dashboard
+    if (user && !user.isAnonymous && isLoginPage) {
+      router.replace('/admin');
     }
   }, [isUserLoading, user, router, pathname]);
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/'); // Redirect to home after logout
+    // The useEffect will handle redirection to the login page
+    router.push('/'); 
   };
 
+  // While loading, show a loading screen (unless it's the login page itself)
   if (isUserLoading && pathname !== '/admin/login') {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
@@ -77,18 +89,14 @@ export default function AdminLayout({
     );
   }
 
-  if (!user && pathname !== '/admin/login') {
-    return null; // Don't render anything while redirecting
+  // If we are on the login page, just render the children (the login form)
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
   }
 
-  // If user is logged in, but on the login page, don't show the layout
-  if (user && pathname === '/admin/login') {
-    return <>{children}</>;
-  }
-  
-  // If no user and on login page, just show the login page
-  if(!user && pathname === '/admin/login') {
-    return <>{children}</>;
+  // If there's no authenticated (non-anonymous) user, don't render the layout
+  if (!user || user.isAnonymous) {
+    return null;
   }
 
   return (

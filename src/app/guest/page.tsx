@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from "react";
 import {
@@ -24,7 +25,8 @@ export default function GuestDashboard() {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   React.useEffect(() => {
-    // If loading is finished and there's no user, initiate anonymous sign-in.
+    // If loading is finished and there's no user at all, initiate anonymous sign-in.
+    // This will only run when a completely unauthenticated user visits this page.
     if (!isUserLoading && !user) {
       initiateAnonymousSignIn(auth);
     }

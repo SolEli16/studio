@@ -37,13 +37,11 @@ function AdminAuthWall({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    // Si la carga ha terminado y el usuario no es un admin válido (no existe o es anónimo), redirigir.
     if (!isUserLoading && (!user || user.isAnonymous)) {
       router.replace('/admin/login');
     }
   }, [isUserLoading, user, router]);
 
-  // Mientras se verifica el usuario, mostrar una pantalla de carga.
   if (isUserLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
@@ -52,12 +50,10 @@ function AdminAuthWall({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Si después de cargar, el usuario no es un admin válido, no renderizar nada mientras redirige.
   if (!user || user.isAnonymous) {
     return null;
   }
 
-  // Si es un admin válido, mostrar el contenido.
   return <>{children}</>;
 }
 
@@ -77,7 +73,6 @@ export default function AdminLayout({
     router.push('/'); 
   };
   
-  // La página de login no debe tener el layout de administrador
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }

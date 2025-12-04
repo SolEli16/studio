@@ -17,7 +17,7 @@ import {
   LogOut,
 } from "lucide-react";
 import * as React from 'react';
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 import {
   SidebarProvider,
@@ -56,24 +56,39 @@ export default function AdminLayout({
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
 
   React.useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && pathname !== '/admin/login') {
       router.replace('/admin/login');
     }
-  }, [isUserLoading, user, router]);
+  }, [isUserLoading, user, router, pathname]);
 
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/'); // Redirect to home after logout
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading && pathname !== '/admin/login') {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <p>Verificando sesión...</p>
       </div>
     );
+  }
+
+  if (!user && pathname !== '/admin/login') {
+    return null; // Don't render anything while redirecting
+  }
+
+  // If user is logged in, but on the login page, don't show the layout
+  if (user && pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+  
+  // If no user and on login page, just show the login page
+  if(!user && pathname === '/admin/login') {
+    return <>{children}</>;
   }
 
   return (
@@ -101,7 +116,7 @@ export default function AdminLayout({
                   <div className="flex flex-col items-start" data-sidebar="user-info">
                     <span className="text-sm font-medium">Admin</span>
                     <span className="text-xs text-muted-foreground">
-                      {user.email || 'admin@edugestion.com'}
+                      {user?.email || 'admin@edugestion.com'}
                     </span>
                   </div>
                 </Button>
@@ -111,7 +126,7 @@ export default function AdminLayout({
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">Admin</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                       {user.email || 'admin@edugestion.com'}
+                       {user?.email || 'admin@edugestion.com'}
                     </p>
                   </div>
                 </DropdownMenuLabel>
